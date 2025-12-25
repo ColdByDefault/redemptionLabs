@@ -6,7 +6,7 @@ applyTo: "**"
 
 ## Architecture: Separation of Concerns
 
-When creating new features (tables, components, modules), follow this structure:
+When creating new features (tables, components, modules), ask questions if needed, then follow this structure:
 
 ### 1. Types (`types/`)
 

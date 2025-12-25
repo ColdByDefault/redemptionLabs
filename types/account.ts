@@ -4,6 +4,7 @@ export type AccountUsageCategory =
   | "email"
   | "storage"
   | "authentication"
+  | "education"
   | "backup"
   | "development"
   | "social"

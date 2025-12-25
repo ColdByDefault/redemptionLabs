@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { EntityEditor } from "@/components/editor";
 
 interface AccountTableProps {
   accounts: Account[];
@@ -25,6 +26,7 @@ export function AccountTable({ accounts }: AccountTableProps) {
           <TableHead>Primary</TableHead>
           <TableHead>Used For</TableHead>
           <TableHead>Notes</TableHead>
+          <TableHead className="w-12">Edit</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -54,6 +56,9 @@ export function AccountTable({ accounts }: AccountTableProps) {
               </div>
             </TableCell>
             <TableCell className="max-w-50 truncate">{account.notes}</TableCell>
+            <TableCell>
+              <EntityEditor entity={account} entityType="account" />
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

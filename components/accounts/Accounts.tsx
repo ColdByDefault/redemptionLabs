@@ -1,8 +1,28 @@
-import { accounts } from "@/data/accounts";
+import { prisma } from "@/lib/prisma";
 import { AccountTable } from "./AccountTable";
 import { AccountSummary } from "./AccountSummary";
+import type { Account } from "@/types/account";
 
-export function Accounts() {
+export async function Accounts(): Promise<React.ReactElement> {
+  const dbAccounts = await prisma.account.findMany({
+    include: { usages: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const accounts: Account[] = dbAccounts.map((a) => ({
+    id: a.id,
+    email: a.email,
+    provider: a.provider as Account["provider"],
+    label: a.label,
+    isPrimary: a.isPrimary,
+    notes: a.notes,
+    usages: a.usages.map((u) => ({
+      service: u.service,
+      category: u.category as Account["usages"][number]["category"],
+      description: u.description,
+    })),
+  }));
+
   return (
     <div className="space-y-6">
       <div>

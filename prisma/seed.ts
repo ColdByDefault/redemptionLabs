@@ -1,6 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import dotenv from "dotenv";
 
-const prisma = new PrismaClient();
+// Load environment variables
+dotenv.config();
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("🌱 Starting seed...");
@@ -19,28 +27,47 @@ async function main() {
 
   const account1 = await prisma.account.create({
     data: {
-      email: "personal@gmail.com",
+      email: "abo.ayash.yazan@gmail.com",
       provider: "google",
-      label: "Personal",
+      label: "Main Personal",
       isPrimary: true,
-      notes: "Main personal account",
+      notes: "Main personal Google account",
       usages: {
         create: [
           {
-            service: "YouTube",
+            service: "Gmail",
+            category: "email",
+            description: "Main Gmail account",
+          },
+          {
+            service: "Google",
             category: "personal",
-            description: "Main YouTube account",
+            description: "Main Google account",
           },
           {
-            service: "Google Drive",
-            category: "storage",
-            description: "Personal documents",
+            service: "GitHub",
+            category: "development",
+            description: "GitHub account",
           },
-          { service: "Gmail", category: "email", description: "Primary email" },
           {
-            service: "Netflix",
-            category: "authentication",
-            description: "Login with Google",
+            service: "Squarespace",
+            category: "other",
+            description: "Squarespace and Domain",
+          },
+          {
+            service: "Steam",
+            category: "personal",
+            description: "Steam gaming",
+          },
+          {
+            service: "Spotify",
+            category: "personal",
+            description: "Spotify music",
+          },
+          {
+            service: "Social Media",
+            category: "social",
+            description: "Social media accounts",
           },
         ],
       },
@@ -49,27 +76,22 @@ async function main() {
 
   const account2 = await prisma.account.create({
     data: {
-      email: "work@gmail.com",
-      provider: "google",
-      label: "Work",
-      isPrimary: false,
-      notes: "Work-related services only",
+      email: "stonylonesome7@icloud.com",
+      provider: "icloud",
+      label: "Apple",
+      isPrimary: true,
+      notes: "Apple iCloud account",
       usages: {
         create: [
           {
-            service: "Google Workspace",
-            category: "work",
-            description: "Company workspace",
+            service: "iCloud",
+            category: "storage",
+            description: "iCloud storage and services",
           },
           {
-            service: "Slack",
-            category: "authentication",
-            description: "Work Slack login",
-          },
-          {
-            service: "Notion",
-            category: "authentication",
-            description: "Work Notion",
+            service: "Steam",
+            category: "personal",
+            description: "Steam gaming (secondary)",
           },
         ],
       },
@@ -78,32 +100,27 @@ async function main() {
 
   const account3 = await prisma.account.create({
     data: {
-      email: "user@icloud.com",
-      provider: "icloud",
-      label: "Apple",
-      isPrimary: true,
-      notes: "Apple ecosystem account",
+      email: "yazan.abo-ayash@avarno.de",
+      provider: "microsoft",
+      label: "Work Avarno",
+      isPrimary: false,
+      notes: "Temporary work account at Avarno",
       usages: {
         create: [
           {
-            service: "iCloud Drive",
-            category: "storage",
-            description: "Apple ecosystem storage",
+            service: "Avarno",
+            category: "work",
+            description: "Temp Work Avarno",
           },
           {
-            service: "iCloud Backup",
-            category: "backup",
-            description: "iPhone/iPad backups",
+            service: "Atlassian",
+            category: "work",
+            description: "Jira/Confluence",
           },
           {
-            service: "Apple Music",
-            category: "personal",
-            description: "Music subscription",
-          },
-          {
-            service: "App Store",
-            category: "personal",
-            description: "App purchases",
+            service: "Microsoft 365",
+            category: "work",
+            description: "Microsoft Office and Teams",
           },
         ],
       },
@@ -112,22 +129,22 @@ async function main() {
 
   const account4 = await prisma.account.create({
     data: {
-      email: "dev@gmail.com",
-      provider: "google",
-      label: "Development",
+      email: "yazan.abo-ayash@education.gfn",
+      provider: "microsoft",
+      label: "School GFN",
       isPrimary: false,
-      notes: "Development and testing account",
+      notes: "Temporary school account",
       usages: {
         create: [
           {
-            service: "Firebase",
-            category: "development",
-            description: "Dev projects",
+            service: "GFN Education",
+            category: "education",
+            description: "Temp School account",
           },
           {
-            service: "Google Cloud",
-            category: "development",
-            description: "GCP services",
+            service: "Microsoft 365",
+            category: "education",
+            description: "Microsoft Office and Teams",
           },
         ],
       },
@@ -146,58 +163,31 @@ async function main() {
 
   const subscriptionsData = [
     {
-      name: "Netflix",
-      cost: 15.99,
-      billingCycle: "monthly" as const,
-      nextDueDate: new Date("2025-01-05"),
+      name: "GitHub Copilot",
+      cost: 37,
+      billingCycle: "yearly" as const,
+      nextDueDate: new Date("2026-01-01"),
       status: "active" as const,
-      category: "streaming" as const,
-      notes: "Premium plan, 4K streaming",
+      category: "software" as const,
+      notes: "AI coding assistant",
     },
     {
       name: "Spotify",
-      cost: 10.99,
+      cost: 17,
       billingCycle: "monthly" as const,
-      nextDueDate: new Date("2025-01-10"),
+      nextDueDate: new Date("2026-01-05"),
       status: "active" as const,
       category: "streaming" as const,
-      notes: "Family plan",
+      notes: "Music streaming",
     },
     {
-      name: "GitHub Copilot",
-      cost: 100,
+      name: "Google One Pro",
+      cost: 0,
       billingCycle: "yearly" as const,
-      nextDueDate: new Date("2025-06-15"),
-      status: "active" as const,
-      category: "software" as const,
-      notes: "Individual subscription",
-    },
-    {
-      name: "Adobe Creative Cloud",
-      cost: 54.99,
-      billingCycle: "monthly" as const,
-      nextDueDate: new Date("2025-01-01"),
-      status: "active" as const,
-      category: "software" as const,
-      notes: "All Apps plan",
-    },
-    {
-      name: "Xbox Game Pass",
-      cost: 16.99,
-      billingCycle: "monthly" as const,
-      nextDueDate: new Date("2025-01-20"),
-      status: "paused" as const,
-      category: "gaming" as const,
-      notes: "Ultimate tier",
-    },
-    {
-      name: "AWS",
-      cost: 50,
-      billingCycle: "monthly" as const,
-      nextDueDate: new Date("2025-01-03"),
+      nextDueDate: new Date("2026-08-01"),
       status: "active" as const,
       category: "cloud" as const,
-      notes: "EC2 + S3 usage",
+      notes: "Google Pro subscription",
     },
   ];
 
@@ -211,114 +201,9 @@ async function main() {
   // SEED TRANSACTIONS
   // ============================================================================
 
-  const transactionsData = [
-    {
-      name: "Salary",
-      amount: 5000,
-      type: "income" as const,
-      frequency: "monthly" as const,
-      category: "salary" as const,
-      dueDay: 1,
-      isActive: true,
-      notes: "Main job income",
-    },
-    {
-      name: "Freelance Projects",
-      amount: 1500,
-      type: "income" as const,
-      frequency: "monthly" as const,
-      category: "freelance" as const,
-      dueDay: 15,
-      isActive: true,
-      notes: "Side projects",
-    },
-    {
-      name: "Dividend Income",
-      amount: 2400,
-      type: "income" as const,
-      frequency: "yearly" as const,
-      category: "investment" as const,
-      dueDay: 1,
-      isActive: true,
-      notes: "Stock dividends",
-    },
-    {
-      name: "Rent",
-      amount: 1200,
-      type: "expense" as const,
-      frequency: "monthly" as const,
-      category: "rent" as const,
-      dueDay: 1,
-      isActive: true,
-      notes: "Apartment rent",
-    },
-    {
-      name: "Electricity",
-      amount: 80,
-      type: "expense" as const,
-      frequency: "monthly" as const,
-      category: "utilities" as const,
-      dueDay: 15,
-      isActive: true,
-      notes: "Electric bill",
-    },
-    {
-      name: "Internet",
-      amount: 60,
-      type: "expense" as const,
-      frequency: "monthly" as const,
-      category: "utilities" as const,
-      dueDay: 10,
-      isActive: true,
-      notes: "Fiber connection",
-    },
-    {
-      name: "Health Insurance",
-      amount: 200,
-      type: "expense" as const,
-      frequency: "monthly" as const,
-      category: "insurance" as const,
-      dueDay: 5,
-      isActive: true,
-      notes: "Medical coverage",
-    },
-    {
-      name: "Car Insurance",
-      amount: 1200,
-      type: "expense" as const,
-      frequency: "yearly" as const,
-      category: "insurance" as const,
-      dueDay: 15,
-      isActive: true,
-      notes: "Annual premium",
-    },
-    {
-      name: "Gym Membership",
-      amount: 50,
-      type: "expense" as const,
-      frequency: "monthly" as const,
-      category: "healthcare" as const,
-      dueDay: 1,
-      isActive: true,
-      notes: "Fitness center",
-    },
-    {
-      name: "Groceries",
-      amount: 400,
-      type: "expense" as const,
-      frequency: "monthly" as const,
-      category: "food" as const,
-      dueDay: 1,
-      isActive: true,
-      notes: "Monthly food budget",
-    },
-  ];
+  // No transactions seeded - user requested blank
 
-  for (const tx of transactionsData) {
-    await prisma.transaction.create({ data: tx });
-  }
-
-  console.log(`✅ Created ${transactionsData.length} transactions`);
+  console.log(`✅ Created 0 transactions (left blank as requested)`);
 
   console.log("🎉 Seed completed successfully!");
 }

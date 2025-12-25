@@ -1,8 +1,25 @@
-import { transactions } from "@/data/finance";
+import { prisma } from "@/lib/prisma";
 import { FinanceTable } from "./FinanceTable";
 import { FinanceSummary } from "./FinanceSummary";
+import type { Transaction } from "@/types/finance";
 
-export function Finance() {
+export async function Finance(): Promise<React.ReactElement> {
+  const dbTransactions = await prisma.transaction.findMany({
+    orderBy: { dueDay: "asc" },
+  });
+
+  const transactions: Transaction[] = dbTransactions.map((t) => ({
+    id: t.id,
+    name: t.name,
+    amount: t.amount,
+    type: t.type as Transaction["type"],
+    frequency: t.frequency.replace("_", "-") as Transaction["frequency"],
+    category: t.category as Transaction["category"],
+    dueDay: t.dueDay,
+    isActive: t.isActive,
+    notes: t.notes,
+  }));
+
   return (
     <div className="space-y-6">
       <div>
