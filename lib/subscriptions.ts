@@ -15,7 +15,7 @@ export function getMonthlyCost(cost: number, cycle: BillingCycle): number {
     case "weekly":
       return cost * 4;
     case "monthly":
-    case "one-time":
+    case "one_time":
       return cost;
   }
 }
@@ -27,7 +27,7 @@ export function getYearlyCost(cost: number, cycle: BillingCycle): number {
     case "weekly":
       return cost * 52;
     case "yearly":
-    case "one-time":
+    case "one_time":
       return cost;
   }
 }

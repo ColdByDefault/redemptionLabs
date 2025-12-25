@@ -1,4 +1,4 @@
-export type BillingCycle = "monthly" | "yearly" | "weekly" | "one-time";
+export type BillingCycle = "monthly" | "yearly" | "weekly" | "one_time";
 
 export type SubscriptionStatus = "active" | "cancelled" | "paused" | "trial";
 

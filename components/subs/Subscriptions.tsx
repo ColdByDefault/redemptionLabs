@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { SubscriptionTable } from "./SubscriptionTable";
 import { SubscriptionSummary } from "./SubscriptionSummary";
+import { EntityCreator } from "@/components/editor";
 import type { Subscription } from "@/types/subscription";
 
 export async function Subscriptions(): Promise<React.ReactElement> {
@@ -12,10 +13,7 @@ export async function Subscriptions(): Promise<React.ReactElement> {
     id: s.id,
     name: s.name,
     cost: s.cost,
-    billingCycle: s.billingCycle.replace(
-      "_",
-      "-"
-    ) as Subscription["billingCycle"],
+    billingCycle: s.billingCycle as Subscription["billingCycle"],
     nextDueDate: s.nextDueDate,
     status: s.status as Subscription["status"],
     category: s.category as Subscription["category"],
@@ -24,11 +22,14 @@ export async function Subscriptions(): Promise<React.ReactElement> {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Subscriptions</h2>
-        <p className="text-muted-foreground">
-          Track all your subscriptions and recurring payments.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Subscriptions</h2>
+          <p className="text-muted-foreground">
+            Track all your subscriptions and recurring payments.
+          </p>
+        </div>
+        <EntityCreator entityType="subscription" />
       </div>
       <SubscriptionSummary subscriptions={subscriptions} />
       <div className="rounded-lg border">

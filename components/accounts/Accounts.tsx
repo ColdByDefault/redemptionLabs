@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { AccountTable } from "./AccountTable";
 import { AccountSummary } from "./AccountSummary";
+import { EntityCreator } from "@/components/editor";
 import type { Account } from "@/types/account";
 
 export async function Accounts(): Promise<React.ReactElement> {
@@ -25,11 +26,15 @@ export async function Accounts(): Promise<React.ReactElement> {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Accounts</h2>
-        <p className="text-muted-foreground">
-          Manage your Google and iCloud accounts and track where they are used.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Accounts</h2>
+          <p className="text-muted-foreground">
+            Manage your Google and iCloud accounts and track where they are
+            used.
+          </p>
+        </div>
+        <EntityCreator entityType="account" />
       </div>
       <AccountSummary accounts={accounts} />
       <div className="rounded-lg border">

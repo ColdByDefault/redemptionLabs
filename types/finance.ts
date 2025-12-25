@@ -1,6 +1,6 @@
 export type TransactionType = "income" | "expense";
 
-export type TransactionFrequency = "monthly" | "yearly" | "one-time";
+export type TransactionFrequency = "monthly" | "yearly" | "one_time";
 
 export type TransactionCategory =
   | "salary"

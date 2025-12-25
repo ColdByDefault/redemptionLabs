@@ -12,7 +12,7 @@ export function getMonthlyAmount(
     case "yearly":
       return amount / 12;
     case "monthly":
-    case "one-time":
+    case "one_time":
       return amount;
   }
 }
@@ -25,7 +25,7 @@ export function getYearlyAmount(
     case "monthly":
       return amount * 12;
     case "yearly":
-    case "one-time":
+    case "one_time":
       return amount;
   }
 }
@@ -98,7 +98,7 @@ export function getFrequencyVariant(
       return "secondary";
     case "yearly":
       return "outline";
-    case "one-time":
+    case "one_time":
       return "default";
   }
 }

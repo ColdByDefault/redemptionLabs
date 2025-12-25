@@ -32,7 +32,7 @@ const billingCycles: BillingCycle[] = [
   "monthly",
   "yearly",
   "weekly",
-  "one-time",
+  "one_time",
 ];
 const subscriptionStatuses: SubscriptionStatus[] = [
   "active",
@@ -54,7 +54,7 @@ const transactionTypes: TransactionType[] = ["income", "expense"];
 const transactionFrequencies: TransactionFrequency[] = [
   "monthly",
   "yearly",
-  "one-time",
+  "one_time",
 ];
 const transactionCategories: TransactionCategory[] = [
   "salary",

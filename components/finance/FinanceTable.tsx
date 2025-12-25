@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { EntityEditor } from "@/components/editor";
 
 interface FinanceTableProps {
   transactions: Transaction[];
@@ -32,6 +33,7 @@ export function FinanceTable({ transactions }: FinanceTableProps) {
           <TableHead>Monthly</TableHead>
           <TableHead>Due Day</TableHead>
           <TableHead>Notes</TableHead>
+          <TableHead className="w-12">Edit</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -58,6 +60,9 @@ export function FinanceTable({ transactions }: FinanceTableProps) {
             <TableCell>{transaction.dueDay}</TableCell>
             <TableCell className="max-w-50 truncate">
               {transaction.notes}
+            </TableCell>
+            <TableCell>
+              <EntityEditor entity={transaction} entityType="transaction" />
             </TableCell>
           </TableRow>
         ))}

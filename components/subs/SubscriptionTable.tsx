@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { EntityEditor } from "@/components/editor";
 
 interface SubscriptionTableProps {
   subscriptions: Subscription[];
@@ -34,6 +35,7 @@ export function SubscriptionTable({ subscriptions }: SubscriptionTableProps) {
           <TableHead>Due Date</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Notes</TableHead>
+          <TableHead className="w-12">Edit</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -66,6 +68,9 @@ export function SubscriptionTable({ subscriptions }: SubscriptionTableProps) {
                 </Badge>
               </TableCell>
               <TableCell className="max-w-50 truncate">{sub.notes}</TableCell>
+              <TableCell>
+                <EntityEditor entity={sub} entityType="subscription" />
+              </TableCell>
             </TableRow>
           );
         })}
