@@ -1,0 +1,150 @@
+// Prisma Schema for Redemption App
+// PostgreSQL database for Ubuntu + nginx deployment
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// ACCOUNTS
+// ============================================================================
+
+enum AccountProvider {
+  google
+  icloud
+  microsoft
+  github
+}
+
+enum AccountUsageCategory {
+  email
+  storage
+  authentication
+  backup
+  development
+  social
+  work
+  personal
+  other
+}
+
+model Account {
+  id        String          @id @default(cuid())
+  email     String          @unique
+  provider  AccountProvider
+  label     String
+  isPrimary Boolean         @default(false)
+  notes     String          @default("")
+  usages    AccountUsage[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@map("accounts")
+}
+
+model AccountUsage {
+  id          String               @id @default(cuid())
+  service     String
+  category    AccountUsageCategory
+  description String
+  accountId   String
+  account     Account              @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@map("account_usages")
+}
+
+// ============================================================================
+// SUBSCRIPTIONS
+// ============================================================================
+
+enum BillingCycle {
+  monthly
+  yearly
+  weekly
+  one_time @map("one-time")
+}
+
+enum SubscriptionStatus {
+  active
+  cancelled
+  paused
+  trial
+}
+
+enum SubscriptionCategory {
+  streaming
+  software
+  gaming
+  cloud
+  productivity
+  other
+}
+
+model Subscription {
+  id           String               @id @default(cuid())
+  name         String
+  cost         Float
+  billingCycle BillingCycle
+  nextDueDate  DateTime
+  status       SubscriptionStatus
+  category     SubscriptionCategory
+  notes        String               @default("")
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@map("subscriptions")
+}
+
+// ============================================================================
+// FINANCE / TRANSACTIONS
+// ============================================================================
+
+enum TransactionType {
+  income
+  expense
+}
+
+enum TransactionFrequency {
+  monthly
+  yearly
+  one_time @map("one-time")
+}
+
+enum TransactionCategory {
+  salary
+  freelance
+  investment
+  rent
+  utilities
+  insurance
+  food
+  transport
+  entertainment
+  healthcare
+  education
+  shopping
+  other
+}
+
+model Transaction {
+  id        String               @id @default(cuid())
+  name      String
+  amount    Float
+  type      TransactionType
+  frequency TransactionFrequency
+  category  TransactionCategory
+  dueDay    Int
+  isActive  Boolean              @default(true)
+  notes     String               @default("")
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@map("transactions")
+}
