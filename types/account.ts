@@ -36,11 +36,12 @@ export interface Account {
   price: number | null;
   dueDate: Date | null;
   billingCycle: BillingCycle | null;
-  authMethod: AuthMethod;
+  authMethods: AuthMethod[];
   username: string | null;
   password: string | null;
   notes: string | null;
   emailId: string;
+  linkedBankId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

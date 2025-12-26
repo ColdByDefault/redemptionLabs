@@ -76,6 +76,7 @@ export interface RecurringExpense {
   category: ExpenseCategory;
   linkedCreditId: string | null;
   linkedDebtId: string | null;
+  linkedBankId: string | null;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -92,6 +93,7 @@ export interface OneTimeBill {
   payTo: string;
   dueDate: Date | null;
   isPaid: boolean;
+  linkedBankId: string | null;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;

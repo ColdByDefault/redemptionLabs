@@ -2,6 +2,7 @@
 
 import { Pencil } from "lucide-react";
 import type { AccountWithEmail, Email } from "@/types/account";
+import type { Bank } from "@/types/finance";
 import {
   Table,
   TableBody,
@@ -17,7 +18,7 @@ import {
   getBillingCycleVariant,
   getAuthMethodVariant,
   formatBillingCycle,
-  formatAuthMethod,
+  formatAuthMethods,
   formatPrice,
   formatDate,
 } from "@/lib/account";
@@ -27,11 +28,13 @@ import { PasswordDialog } from "./PasswordDialog";
 interface SubsBoardProps {
   accounts: AccountWithEmail[];
   emails: Email[];
+  banks: Bank[];
 }
 
 export function SubsBoard({
   accounts,
   emails,
+  banks,
 }: SubsBoardProps): React.ReactElement {
   return (
     <div className="space-y-4">
@@ -46,6 +49,7 @@ export function SubsBoard({
           entityType="account"
           mode="create"
           emails={emails}
+          banks={banks}
           trigger={
             <Button size="sm" className="cursor-pointer">
               Add Account
@@ -63,6 +67,7 @@ export function SubsBoard({
               <TableHead>Billing</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Auth</TableHead>
+              <TableHead>Linked Bank</TableHead>
               <TableHead>Username</TableHead>
               <TableHead>Password</TableHead>
               <TableHead>Linked Email</TableHead>
@@ -74,7 +79,7 @@ export function SubsBoard({
             {accounts.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={11}
+                  colSpan={12}
                   className="text-center text-muted-foreground"
                 >
                   No accounts found
@@ -104,9 +109,37 @@ export function SubsBoard({
                   </TableCell>
                   <TableCell>{formatDate(account.dueDate)}</TableCell>
                   <TableCell>
-                    <Badge variant={getAuthMethodVariant(account.authMethod)}>
-                      {formatAuthMethod(account.authMethod)}
-                    </Badge>
+                    <div className="flex flex-wrap gap-1">
+                      {account.authMethods.length === 0 ||
+                      (account.authMethods.length === 1 &&
+                        account.authMethods[0] === "none") ? (
+                        <Badge variant="outline">None</Badge>
+                      ) : (
+                        account.authMethods
+                          .filter((m) => m !== "none")
+                          .map((method) => (
+                            <Badge
+                              key={method}
+                              variant={getAuthMethodVariant(method)}
+                            >
+                              {method === "twofa"
+                                ? "2FA"
+                                : method.charAt(0).toUpperCase() +
+                                  method.slice(1)}
+                            </Badge>
+                          ))
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {account.linkedBankId ? (
+                      <Badge variant="secondary">
+                        {banks.find((b) => b.id === account.linkedBankId)
+                          ?.displayName ?? "Unknown"}
+                      </Badge>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
                   <TableCell>{account.username || "-"}</TableCell>
                   <TableCell>
@@ -133,6 +166,7 @@ export function SubsBoard({
                       mode="edit"
                       entity={account}
                       emails={emails}
+                      banks={banks}
                       trigger={
                         <Button
                           variant="ghost"

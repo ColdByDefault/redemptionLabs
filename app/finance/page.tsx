@@ -44,13 +44,14 @@ export default async function FinancePage(): Promise<React.ReactElement> {
           expenses={recurringExpenses}
           credits={credits}
           debts={debts}
+          banks={banks}
         />
       </section>
 
       {/* Part 3: One-Time Bills */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">One-Time Bills</h2>
-        <OneTimeBillsBoard bills={oneTimeBills} />
+        <OneTimeBillsBoard bills={oneTimeBills} banks={banks} />
       </section>
     </div>
   );

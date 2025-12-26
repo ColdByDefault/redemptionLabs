@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil } from "lucide-react";
-import type { OneTimeBill } from "@/types/finance";
+import type { OneTimeBill, Bank } from "@/types/finance";
 import {
   Table,
   TableBody,
@@ -24,14 +24,23 @@ import { FinanceDialog } from "./FinanceDialog";
 
 interface OneTimeBillsBoardProps {
   bills: OneTimeBill[];
+  banks: Bank[];
 }
 
 export function OneTimeBillsBoard({
   bills,
+  banks,
 }: OneTimeBillsBoardProps): React.ReactElement {
   const unpaidTotal = calculateTotalOneTimeBills(bills);
   const unpaidCount = bills.filter((b) => !b.isPaid).length;
   const paidCount = bills.filter((b) => b.isPaid).length;
+
+  // Helper to get linked bank name
+  function getLinkedBankName(bankId: string | null): string {
+    if (!bankId) return "";
+    const bank = banks.find((b) => b.id === bankId);
+    return bank?.displayName ?? "";
+  }
 
   return (
     <div className="space-y-4">
@@ -64,6 +73,7 @@ export function OneTimeBillsBoard({
         <FinanceDialog
           entityType="oneTimeBill"
           mode="create"
+          banks={banks}
           trigger={
             <Button size="sm" className="cursor-pointer">
               Add Bill
@@ -80,6 +90,7 @@ export function OneTimeBillsBoard({
               <TableHead>Pay To</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Linked Bank</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead className="w-20">Actions</TableHead>
             </TableRow>
@@ -88,7 +99,7 @@ export function OneTimeBillsBoard({
             {bills.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="text-center text-muted-foreground"
                 >
                   No one-time bills found
@@ -123,6 +134,15 @@ export function OneTimeBillsBoard({
                         {formatPaidStatus(bill.isPaid)}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      {bill.linkedBankId ? (
+                        <Badge variant="secondary">
+                          {getLinkedBankName(bill.linkedBankId)}
+                        </Badge>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
                     <TableCell className="max-w-40 truncate">
                       {bill.notes ?? "-"}
                     </TableCell>
@@ -131,6 +151,7 @@ export function OneTimeBillsBoard({
                         entityType="oneTimeBill"
                         entity={bill}
                         mode="edit"
+                        banks={banks}
                         trigger={
                           <Button
                             variant="ghost"

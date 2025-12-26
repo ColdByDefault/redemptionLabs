@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil } from "lucide-react";
-import type { RecurringExpense, Credit, Debt } from "@/types/finance";
+import type { RecurringExpense, Credit, Debt, Bank } from "@/types/finance";
 import {
   Table,
   TableBody,
@@ -30,12 +30,14 @@ interface RecurringExpensesBoardProps {
   expenses: RecurringExpense[];
   credits: Credit[];
   debts: Debt[];
+  banks: Bank[];
 }
 
 export function RecurringExpensesBoard({
   expenses,
   credits,
   debts,
+  banks,
 }: RecurringExpensesBoardProps): React.ReactElement {
   const totalExpenses = calculateTotalRecurringExpenses(expenses);
   const subscriptions = expenses.filter((e) => e.category === "subscription");
@@ -53,6 +55,13 @@ export function RecurringExpensesBoard({
     if (!debtId) return "";
     const debt = debts.find((d) => d.id === debtId);
     return debt?.name ?? "";
+  }
+
+  // Helper to get linked bank name
+  function getLinkedBankName(bankId: string | null): string {
+    if (!bankId) return "";
+    const bank = banks.find((b) => b.id === bankId);
+    return bank?.displayName ?? "";
   }
 
   // Helper to get linked to display (credit or debt)
@@ -100,6 +109,7 @@ export function RecurringExpensesBoard({
           mode="create"
           credits={credits}
           debts={debts}
+          banks={banks}
           trigger={
             <Button size="sm" className="cursor-pointer">
               Add Expense
@@ -119,6 +129,7 @@ export function RecurringExpensesBoard({
               <TableHead>Trial Ends</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Linked To</TableHead>
+              <TableHead>Linked Bank</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead className="w-20">Actions</TableHead>
             </TableRow>
@@ -127,7 +138,7 @@ export function RecurringExpensesBoard({
             {expenses.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={10}
+                  colSpan={11}
                   className="text-center text-muted-foreground"
                 >
                   No recurring expenses found
@@ -180,6 +191,15 @@ export function RecurringExpensesBoard({
                       </Badge>
                     </TableCell>
                     <TableCell>{getLinkedToDisplay(expense)}</TableCell>
+                    <TableCell>
+                      {expense.linkedBankId ? (
+                        <Badge variant="secondary">
+                          {getLinkedBankName(expense.linkedBankId)}
+                        </Badge>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
                     <TableCell className="max-w-40 truncate">
                       {expense.notes ?? "-"}
                     </TableCell>
@@ -189,6 +209,7 @@ export function RecurringExpensesBoard({
                         entity={expense}
                         credits={credits}
                         debts={debts}
+                        banks={banks}
                         mode="edit"
                         trigger={
                           <Button

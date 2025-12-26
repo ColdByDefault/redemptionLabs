@@ -1,10 +1,12 @@
 import { getEmailsWithAccounts, getAccountsWithEmail } from "@/actions/account";
+import { getBanks } from "@/actions/finance";
 import { EmailsBoard, SubsBoard } from "@/components/accounts";
 
 export default async function AccountsPage(): Promise<React.ReactElement> {
-  const [emails, accounts] = await Promise.all([
+  const [emails, accounts, banks] = await Promise.all([
     getEmailsWithAccounts(),
     getAccountsWithEmail(),
+    getBanks(),
   ]);
 
   return (
@@ -16,7 +18,7 @@ export default async function AccountsPage(): Promise<React.ReactElement> {
         </p>
       </div>
       <EmailsBoard emails={emails} />
-      <SubsBoard accounts={accounts} emails={emails} />
+      <SubsBoard accounts={accounts} emails={emails} banks={banks} />
     </div>
   );
 }

@@ -37,9 +37,7 @@ export interface UpdateEmailInput {
   notes?: string | null;
 }
 
-export async function createEmail(
-  input: CreateEmailInput
-): Promise<{
+export async function createEmail(input: CreateEmailInput): Promise<{
   success: boolean;
   error?: string;
   expenseAdded?: "recurring" | "onetime";
@@ -77,6 +75,7 @@ export async function createEmail(
             category: "subscription",
             linkedCreditId: null,
             linkedDebtId: null,
+            linkedBankId: null,
             notes: `Auto-added from email: ${input.email}`,
           },
         });
@@ -93,6 +92,7 @@ export async function createEmail(
             payTo: "Email Provider",
             dueDate: null,
             isPaid: false,
+            linkedBankId: null,
             notes: `Auto-added from email: ${input.email}`,
           },
         });
@@ -154,11 +154,12 @@ export interface CreateAccountInput {
   price?: number | null;
   dueDate?: Date | null;
   billingCycle?: BillingCycle | null;
-  authMethod?: AuthMethod;
+  authMethods?: AuthMethod[];
   username?: string | null;
   password?: string | null;
   notes?: string | null;
   emailId: string;
+  linkedBankId?: string | null;
 }
 
 export interface UpdateAccountInput {
@@ -168,33 +169,50 @@ export interface UpdateAccountInput {
   price?: number | null;
   dueDate?: Date | null;
   billingCycle?: BillingCycle | null;
-  authMethod?: AuthMethod;
+  authMethods?: AuthMethod[];
   username?: string | null;
   password?: string | null;
   notes?: string | null;
   emailId?: string;
+  linkedBankId?: string | null;
 }
 
-export async function createAccount(
-  input: CreateAccountInput
-): Promise<{
+export async function createAccount(input: CreateAccountInput): Promise<{
   success: boolean;
   error?: string;
   expenseAdded?: "recurring" | "onetime";
 }> {
   try {
+    // Validation: Check for empty provider name
+    const trimmedProvider = input.provider.trim();
+    if (!trimmedProvider) {
+      return { success: false, error: "Provider name cannot be empty" };
+    }
+
+    // Validation: Check for duplicate provider name
+    const existingAccount = await prisma.account.findUnique({
+      where: { provider: trimmedProvider },
+    });
+    if (existingAccount) {
+      return {
+        success: false,
+        error: `An account with provider "${trimmedProvider}" already exists`,
+      };
+    }
+
     await prisma.account.create({
       data: {
-        provider: input.provider,
+        provider: trimmedProvider,
         tier: input.tier,
         price: input.price ?? null,
         dueDate: input.dueDate ?? null,
         billingCycle: input.billingCycle ?? null,
-        authMethod: input.authMethod ?? "none",
+        authMethods: input.authMethods ?? ["none"],
         username: input.username ?? null,
         password: input.password ?? null,
         notes: input.notes ?? null,
         emailId: input.emailId,
+        linkedBankId: input.linkedBankId ?? null,
       },
     });
 
@@ -206,7 +224,7 @@ export async function createAccount(
         // Add to recurring expenses
         await prisma.recurringExpense.create({
           data: {
-            name: input.provider,
+            name: trimmedProvider,
             amount: input.price,
             dueDate: input.dueDate ?? null,
             cycle: input.billingCycle as RecurringCycle,
@@ -215,7 +233,8 @@ export async function createAccount(
             category: "subscription",
             linkedCreditId: null,
             linkedDebtId: null,
-            notes: `Auto-added from account: ${input.provider}`,
+            linkedBankId: input.linkedBankId ?? null,
+            notes: `Auto-added from account: ${trimmedProvider}`,
           },
         });
         expenseAdded = "recurring";
@@ -226,12 +245,13 @@ export async function createAccount(
         // Add to one-time bills
         await prisma.oneTimeBill.create({
           data: {
-            name: input.provider,
+            name: trimmedProvider,
             amount: input.price,
-            payTo: input.provider,
+            payTo: trimmedProvider,
             dueDate: input.dueDate ?? null,
             isPaid: false,
-            notes: `Auto-added from account: ${input.provider}`,
+            linkedBankId: input.linkedBankId ?? null,
+            notes: `Auto-added from account: ${trimmedProvider}`,
           },
         });
         expenseAdded = "onetime";
@@ -255,6 +275,30 @@ export async function updateAccount(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { id, ...data } = input;
+
+    // Validation: Check for empty provider name if provided
+    if (data.provider !== undefined) {
+      const trimmedProvider = data.provider.trim();
+      if (!trimmedProvider) {
+        return { success: false, error: "Provider name cannot be empty" };
+      }
+
+      // Check for duplicate provider name (excluding current account)
+      const existingAccount = await prisma.account.findFirst({
+        where: {
+          provider: trimmedProvider,
+          id: { not: id },
+        },
+      });
+      if (existingAccount) {
+        return {
+          success: false,
+          error: `An account with provider "${trimmedProvider}" already exists`,
+        };
+      }
+      data.provider = trimmedProvider;
+    }
+
     await prisma.account.update({
       where: { id },
       data,

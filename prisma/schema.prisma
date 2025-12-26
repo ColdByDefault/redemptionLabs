@@ -64,17 +64,18 @@ model Email {
 
 model Account {
   id           String       @id @default(cuid())
-  provider     String
+  provider     String       @unique
   tier         AccountTier
   price        Float?
   dueDate      DateTime?
   billingCycle BillingCycle?
-  authMethod   AuthMethod   @default(none)
+  authMethods  AuthMethod[] @default([none])
   username     String?
   password     String?
   notes        String?
   emailId      String
   email        Email        @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  linkedBankId String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -176,6 +177,7 @@ model RecurringExpense {
   category     ExpenseCategory
   linkedCreditId String?       // Optional link to a credit being paid back
   linkedDebtId   String?       // Optional link to a debt being paid back
+  linkedBankId   String?       // Optional link to bank for payment
   notes        String?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
@@ -184,15 +186,16 @@ model RecurringExpense {
 }
 
 model OneTimeBill {
-  id        String   @id @default(cuid())
-  name      String
-  amount    Float
-  payTo     String
-  dueDate   DateTime?
-  isPaid    Boolean  @default(false)
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  amount       Float
+  payTo        String
+  dueDate      DateTime?
+  isPaid       Boolean  @default(false)
+  linkedBankId String?  // Optional link to bank for payment
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("one_time_bills")
 }

@@ -16,6 +16,7 @@ import {
   getEmailCategoryColor,
   getAccountTierColor,
   getBillingCycleVariant,
+  getLinkedAccountsColor,
   formatEmailCategory,
   formatBillingCycle,
   formatPrice,
@@ -109,7 +110,11 @@ export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
                     />
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{email.accounts.length}</Badge>
+                    <Badge
+                      className={getLinkedAccountsColor(email.accounts.length)}
+                    >
+                      {email.accounts.length}
+                    </Badge>
                   </TableCell>
                   <TableCell className="max-w-48 truncate">
                     {email.notes || "-"}

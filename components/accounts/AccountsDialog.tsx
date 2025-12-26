@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,7 @@ import type {
   AuthMethod,
   EmailCategory,
 } from "@/types/account";
+import type { Bank } from "@/types/finance";
 
 // ============================================================
 // TYPES
@@ -51,6 +53,8 @@ interface AccountsDialogProps {
   mode: "create" | "edit";
   // For accounts - need emails for linking
   emails?: Email[];
+  // For paid accounts - need banks for linking
+  banks?: Bank[];
 }
 
 // ============================================================
@@ -97,10 +101,14 @@ export function AccountsDialog({
   trigger,
   mode,
   emails = [],
+  banks = [],
 }: AccountsDialogProps): React.ReactElement {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [selectedAuthMethods, setSelectedAuthMethods] = useState<AuthMethod[]>(
+    []
+  );
 
   const label = ENTITY_LABELS[entityType];
 
@@ -113,9 +121,30 @@ export function AccountsDialog({
     setFormData((prev) => ({ ...prev, [key]: value }));
   }
 
+  function toggleAuthMethod(method: AuthMethod): void {
+    setSelectedAuthMethods((prev) => {
+      if (method === "none") {
+        // If selecting "none", clear all other selections
+        return ["none"];
+      }
+      // Remove "none" if selecting another method
+      const withoutNone = prev.filter((m) => m !== "none");
+      if (withoutNone.includes(method)) {
+        const result = withoutNone.filter((m) => m !== method);
+        return result.length === 0 ? ["none"] : result;
+      }
+      return [...withoutNone, method];
+    });
+  }
+
   // Initialize form data based on entity type
   useEffect(() => {
     setFormData(getInitialFormData());
+    // Initialize auth methods for accounts
+    if (entityType === "account") {
+      const account = entity as Account | undefined;
+      setSelectedAuthMethods(account?.authMethods ?? ["none"]);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entity, entityType]);
 
@@ -129,11 +158,11 @@ export function AccountsDialog({
           price: account?.price?.toString() ?? "",
           dueDate: formatDateForInput(account?.dueDate),
           billingCycle: account?.billingCycle ?? "",
-          authMethod: account?.authMethod ?? "none",
           username: account?.username ?? "",
           password: account?.password ?? "",
           notes: account?.notes ?? "",
           emailId: account?.emailId ?? "",
+          linkedBankId: account?.linkedBankId ?? "",
         };
       }
       case "email": {
@@ -156,6 +185,9 @@ export function AccountsDialog({
 
   function resetForm(): void {
     setFormData(getInitialFormData());
+    if (entityType === "account") {
+      setSelectedAuthMethods(["none"]);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
@@ -209,20 +241,25 @@ export function AccountsDialog({
         if (!emailId) {
           return { success: false, error: "Please select a linked email" };
         }
+        const tier = getField("tier") as AccountTier;
         return createAccount({
           provider: getField("provider"),
-          tier: getField("tier") as AccountTier,
+          tier: tier,
           price: getField("price") ? parseFloat(getField("price")) : null,
           dueDate: getField("dueDate") ? new Date(getField("dueDate")) : null,
           billingCycle:
             getField("billingCycle") && getField("billingCycle") !== "none"
               ? (getField("billingCycle") as BillingCycle)
               : null,
-          authMethod: getField("authMethod") as AuthMethod,
+          authMethods: selectedAuthMethods,
           username: getField("username") || null,
           password: getField("password") || null,
           notes: getField("notes") || null,
           emailId: emailId,
+          linkedBankId:
+            tier === "paid" && getField("linkedBankId")
+              ? getField("linkedBankId")
+              : null,
         });
       }
       case "email":
@@ -248,23 +285,29 @@ export function AccountsDialog({
     if (!entity) return { success: false, error: "No entity to update" };
 
     switch (entityType) {
-      case "account":
+      case "account": {
+        const tier = getField("tier") as AccountTier;
         return updateAccount({
           id: entity.id,
           provider: getField("provider"),
-          tier: getField("tier") as AccountTier,
+          tier: tier,
           price: getField("price") ? parseFloat(getField("price")) : null,
           dueDate: getField("dueDate") ? new Date(getField("dueDate")) : null,
           billingCycle:
             getField("billingCycle") && getField("billingCycle") !== "none"
               ? (getField("billingCycle") as BillingCycle)
               : null,
-          authMethod: getField("authMethod") as AuthMethod,
+          authMethods: selectedAuthMethods,
           username: getField("username") || null,
           password: getField("password") || null,
           notes: getField("notes") || null,
           emailId: getField("emailId"),
+          linkedBankId:
+            tier === "paid" && getField("linkedBankId")
+              ? getField("linkedBankId")
+              : null,
         });
+      }
       case "email":
         return updateEmail({
           id: entity.id,
@@ -389,41 +432,6 @@ export function AccountsDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="authMethod">Auth Method</Label>
-            <Select
-              value={formData.authMethod ?? ""}
-              onValueChange={(value) => updateField("authMethod", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select auth" />
-              </SelectTrigger>
-              <SelectContent>
-                {AUTH_METHODS.map((method) => (
-                  <SelectItem key={method} value={method}>
-                    {method === "twofa"
-                      ? "2FA"
-                      : method.charAt(0).toUpperCase() + method.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="price">Price</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              value={formData.price ?? ""}
-              onChange={(e) => updateField("price", e.target.value)}
-              placeholder="0.00"
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="billingCycle">Billing Cycle</Label>
             <Select
               value={formData.billingCycle ?? ""}
@@ -445,13 +453,74 @@ export function AccountsDialog({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="dueDate">Due Date</Label>
-          <Input
-            id="dueDate"
-            type="date"
-            value={formData.dueDate ?? ""}
-            onChange={(e) => updateField("dueDate", e.target.value)}
-          />
+          <Label>Auth Methods</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {AUTH_METHODS.map((method) => (
+              <div key={method} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`auth-${method}`}
+                  checked={selectedAuthMethods.includes(method)}
+                  onCheckedChange={() => toggleAuthMethod(method)}
+                />
+                <Label
+                  htmlFor={`auth-${method}`}
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  {method === "twofa"
+                    ? "2FA"
+                    : method.charAt(0).toUpperCase() + method.slice(1)}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {getField("tier") === "paid" && banks.length > 0 && (
+          <div className="space-y-2">
+            <Label htmlFor="linkedBankId">Linked Bank</Label>
+            <Select
+              value={formData.linkedBankId || "none"}
+              onValueChange={(value) =>
+                updateField("linkedBankId", value === "none" ? "" : value)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select bank (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {banks.map((bank) => (
+                  <SelectItem key={bank.id} value={bank.id}>
+                    {bank.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="price">Price</Label>
+            <Input
+              id="price"
+              type="number"
+              step="0.01"
+              value={formData.price ?? ""}
+              onChange={(e) => updateField("price", e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dueDate">Due Date</Label>
+            <Input
+              id="dueDate"
+              type="date"
+              value={formData.dueDate ?? ""}
+              onChange={(e) => updateField("dueDate", e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="space-y-2">

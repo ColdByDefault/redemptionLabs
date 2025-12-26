@@ -83,6 +83,7 @@ interface FinanceDialogProps {
   // For recurring expenses - optional linked data
   credits?: Credit[];
   debts?: Debt[];
+  banks?: Bank[];
 }
 
 // ============================================================
@@ -129,6 +130,7 @@ export function FinanceDialog({
   mode,
   credits = [],
   debts = [],
+  banks = [],
 }: FinanceDialogProps): React.ReactElement {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -196,6 +198,7 @@ export function FinanceDialog({
           category: expense?.category ?? "subscription",
           linkedCreditId: expense?.linkedCreditId ?? "",
           linkedDebtId: expense?.linkedDebtId ?? "",
+          linkedBankId: expense?.linkedBankId ?? "",
           notes: expense?.notes ?? "",
         };
       }
@@ -207,6 +210,7 @@ export function FinanceDialog({
           payTo: bill?.payTo ?? "",
           dueDate: formatDateForInput(bill?.dueDate),
           isPaid: bill?.isPaid ? "true" : "false",
+          linkedBankId: bill?.linkedBankId ?? "",
           notes: bill?.notes ?? "",
         };
       }
@@ -308,6 +312,7 @@ export function FinanceDialog({
           category: getField("category") as ExpenseCategory,
           linkedCreditId: getField("linkedCreditId") || null,
           linkedDebtId: getField("linkedDebtId") || null,
+          linkedBankId: getField("linkedBankId") || null,
           notes: getField("notes") || null,
         });
       case "oneTimeBill":
@@ -317,6 +322,7 @@ export function FinanceDialog({
           payTo: getField("payTo"),
           dueDate: getField("dueDate") ? new Date(getField("dueDate")) : null,
           isPaid: getField("isPaid") === "true",
+          linkedBankId: getField("linkedBankId") || null,
           notes: getField("notes") || null,
         });
       case "bank":
@@ -385,6 +391,7 @@ export function FinanceDialog({
           category: getField("category") as ExpenseCategory,
           linkedCreditId: getField("linkedCreditId") || null,
           linkedDebtId: getField("linkedDebtId") || null,
+          linkedBankId: getField("linkedBankId") || null,
           notes: getField("notes") || null,
         });
       case "oneTimeBill":
@@ -395,6 +402,7 @@ export function FinanceDialog({
           payTo: getField("payTo"),
           dueDate: getField("dueDate") ? new Date(getField("dueDate")) : null,
           isPaid: getField("isPaid") === "true",
+          linkedBankId: getField("linkedBankId") || null,
           notes: getField("notes") || null,
         });
       case "bank":
@@ -867,6 +875,29 @@ export function FinanceDialog({
             </Select>
           </div>
         )}
+        {banks.length > 0 && (
+          <div className="space-y-2">
+            <Label htmlFor="linkedBankId">Linked Bank (Optional)</Label>
+            <Select
+              value={formData.linkedBankId || "none"}
+              onValueChange={(v) =>
+                updateField("linkedBankId", v === "none" ? "" : v)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a bank..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {banks.map((bank) => (
+                  <SelectItem key={bank.id} value={bank.id}>
+                    {bank.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </>
     );
   }
@@ -934,6 +965,29 @@ export function FinanceDialog({
             </Select>
           </div>
         </div>
+        {banks.length > 0 && (
+          <div className="space-y-2">
+            <Label htmlFor="linkedBankId">Linked Bank (Optional)</Label>
+            <Select
+              value={formData.linkedBankId || "none"}
+              onValueChange={(v) =>
+                updateField("linkedBankId", v === "none" ? "" : v)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a bank..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {banks.map((bank) => (
+                  <SelectItem key={bank.id} value={bank.id}>
+                    {bank.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </>
     );
   }

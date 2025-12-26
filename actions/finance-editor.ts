@@ -261,6 +261,7 @@ export interface CreateRecurringExpenseInput {
   category: ExpenseCategory;
   linkedCreditId?: string | null;
   linkedDebtId?: string | null;
+  linkedBankId?: string | null;
   notes?: string | null;
 }
 
@@ -275,6 +276,7 @@ export interface UpdateRecurringExpenseInput {
   category?: ExpenseCategory;
   linkedCreditId?: string | null;
   linkedDebtId?: string | null;
+  linkedBankId?: string | null;
   notes?: string | null;
 }
 
@@ -293,6 +295,7 @@ export async function createRecurringExpense(
         category: input.category,
         linkedCreditId: input.linkedCreditId ?? null,
         linkedDebtId: input.linkedDebtId ?? null,
+        linkedBankId: input.linkedBankId ?? null,
         notes: input.notes ?? null,
       },
     });
@@ -346,6 +349,7 @@ export interface CreateOneTimeBillInput {
   payTo: string;
   dueDate?: Date | null;
   isPaid?: boolean;
+  linkedBankId?: string | null;
   notes?: string | null;
 }
 
@@ -356,6 +360,7 @@ export interface UpdateOneTimeBillInput {
   payTo?: string;
   dueDate?: Date | null;
   isPaid?: boolean;
+  linkedBankId?: string | null;
   notes?: string | null;
 }
 
@@ -370,6 +375,7 @@ export async function createOneTimeBill(
         payTo: input.payTo,
         dueDate: input.dueDate ?? null,
         isPaid: input.isPaid ?? false,
+        linkedBankId: input.linkedBankId ?? null,
         notes: input.notes ?? null,
       },
     });

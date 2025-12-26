@@ -103,3 +103,28 @@ export function formatEmailCategory(category: EmailCategory): string {
   };
   return labels[category];
 }
+
+// Linked accounts count color classes
+export function getLinkedAccountsColor(count: number): string {
+  if (count === 0) {
+    return "bg-gray-500 text-white border-gray-500";
+  }
+  if (count <= 3) {
+    return "bg-blue-500 text-white border-blue-500";
+  }
+  if (count <= 6) {
+    return "bg-amber-500 text-white border-amber-500";
+  }
+  return "bg-red-500 text-white border-red-500";
+}
+
+// Format auth methods for display (multiple)
+export function formatAuthMethods(methods: AuthMethod[]): string {
+  if (methods.length === 0 || (methods.length === 1 && methods[0] === "none")) {
+    return "None";
+  }
+  return methods
+    .filter((m) => m !== "none")
+    .map((method) => formatAuthMethod(method))
+    .join(", ");
+}
