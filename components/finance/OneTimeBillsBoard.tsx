@@ -1,6 +1,7 @@
 "use client";
 
-import { Pencil } from "lucide-react";
+import { useOptimistic, useTransition } from "react";
+import { Pencil, Check, X } from "lucide-react";
 import type { OneTimeBill, Bank } from "@/types/finance";
 import {
   Table,
@@ -21,6 +22,7 @@ import {
   isOverdue,
   calculateTotalOneTimeBills,
 } from "@/lib/finance";
+import { updateOneTimeBill } from "@/actions/finance-editor";
 import { FinanceDialog } from "./FinanceDialog";
 
 interface OneTimeBillsBoardProps {
@@ -28,19 +30,56 @@ interface OneTimeBillsBoardProps {
   banks: Bank[];
 }
 
+// Optimistic action type
+type BillAction =
+  | { type: "toggle_paid"; id: string }
+  | { type: "update"; bill: OneTimeBill };
+
+function billReducer(state: OneTimeBill[], action: BillAction): OneTimeBill[] {
+  switch (action.type) {
+    case "toggle_paid":
+      return state.map((bill) =>
+        bill.id === action.id ? { ...bill, isPaid: !bill.isPaid } : bill
+      );
+    case "update":
+      return state.map((bill) =>
+        bill.id === action.bill.id ? action.bill : bill
+      );
+    default:
+      return state;
+  }
+}
+
 export function OneTimeBillsBoard({
   bills,
   banks,
 }: OneTimeBillsBoardProps): React.ReactElement {
-  const unpaidTotal = calculateTotalOneTimeBills(bills);
-  const unpaidCount = bills.filter((b) => !b.isPaid).length;
-  const paidCount = bills.filter((b) => b.isPaid).length;
+  const [isPending, startTransition] = useTransition();
+  const [optimisticBills, addOptimisticAction] = useOptimistic(
+    bills,
+    billReducer
+  );
+
+  const unpaidTotal = calculateTotalOneTimeBills(optimisticBills);
+  const unpaidCount = optimisticBills.filter((b) => !b.isPaid).length;
+  const paidCount = optimisticBills.filter((b) => b.isPaid).length;
 
   // Helper to get linked bank name
   function getLinkedBankName(bankId: string | null): string {
     if (!bankId) return "";
     const bank = banks.find((b) => b.id === bankId);
     return bank?.displayName ?? "";
+  }
+
+  // Handle toggle paid status with optimistic update
+  function handleTogglePaid(bill: OneTimeBill): void {
+    startTransition(async () => {
+      addOptimisticAction({ type: "toggle_paid", id: bill.id });
+      await updateOneTimeBill({
+        id: bill.id,
+        isPaid: !bill.isPaid,
+      });
+    });
   }
 
   return (
@@ -70,7 +109,7 @@ export function OneTimeBillsBoard({
         <div className="flex items-center gap-4">
           <h3 className="text-lg font-semibold">One-Time Bills</h3>
           <span className="text-sm text-muted-foreground">
-            {bills.length} bills
+            {optimisticBills.length} bills
           </span>
         </div>
         <FinanceDialog
@@ -98,11 +137,11 @@ export function OneTimeBillsBoard({
               <TableHead>Status</TableHead>
               <TableHead>Linked Bank</TableHead>
               <TableHead>Notes</TableHead>
-              <TableHead className="w-20">Actions</TableHead>
+              <TableHead className="w-28">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bills.length === 0 ? (
+            {optimisticBills.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={8}
@@ -112,10 +151,13 @@ export function OneTimeBillsBoard({
                 </TableCell>
               </TableRow>
             ) : (
-              bills.map((bill) => {
+              optimisticBills.map((bill) => {
                 const overdue = !bill.isPaid && isOverdue(bill.dueDate);
                 return (
-                  <TableRow key={bill.id}>
+                  <TableRow
+                    key={bill.id}
+                    className={isPending ? "opacity-70" : ""}
+                  >
                     <TableCell className="font-medium">
                       {bill.name}
                       {overdue && (
@@ -153,21 +195,39 @@ export function OneTimeBillsBoard({
                       {bill.notes ?? "-"}
                     </TableCell>
                     <TableCell>
-                      <FinanceDialog
-                        entityType="oneTimeBill"
-                        entity={bill}
-                        mode="edit"
-                        banks={banks}
-                        trigger={
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="cursor-pointer"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        }
-                      />
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="cursor-pointer h-8 w-8"
+                          onClick={() => handleTogglePaid(bill)}
+                          disabled={isPending}
+                          title={
+                            bill.isPaid ? "Mark as unpaid" : "Mark as paid"
+                          }
+                        >
+                          {bill.isPaid ? (
+                            <X className="h-4 w-4 text-red-500" />
+                          ) : (
+                            <Check className="h-4 w-4 text-green-500" />
+                          )}
+                        </Button>
+                        <FinanceDialog
+                          entityType="oneTimeBill"
+                          entity={bill}
+                          mode="edit"
+                          banks={banks}
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="cursor-pointer h-8 w-8"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          }
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

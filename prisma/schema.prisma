@@ -243,6 +243,32 @@ model SectionTimestamp {
 }
 
 // ============================================================
+// NOTIFICATION SYSTEM
+// ============================================================
+
+enum NotificationType {
+  bill_due
+  bill_overdue
+  low_balance
+  recurring_created
+  payment_reminder
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  entityId  String?          // Optional reference to related entity
+  metadata  Json?            // Additional context data
+  createdAt DateTime         @default(now())
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================================
 // AUDIT LOG
 // ============================================================
 

@@ -7,8 +7,18 @@ import { navLinks } from "@/data/navbar";
 import { ModeToggle } from "@/components/theme";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { Notification } from "@/types/notification";
+import { NotificationBell } from "@/components/notifications";
 
-export function Navbar(): React.ReactElement {
+interface NavbarProps {
+  notifications?: Notification[];
+  unreadCount?: number;
+}
+
+export function Navbar({
+  notifications = [],
+  unreadCount = 0,
+}: NavbarProps): React.ReactElement {
   const pathname = usePathname();
 
   return (
@@ -39,6 +49,10 @@ export function Navbar(): React.ReactElement {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationBell
+            notifications={notifications}
+            unreadCount={unreadCount}
+          />
           <Button variant="ghost" size="icon" asChild>
             <Link href="/trash">
               <Trash2
