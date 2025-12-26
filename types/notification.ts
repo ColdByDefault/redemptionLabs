@@ -6,11 +6,22 @@
 // ============================================================
 
 export type NotificationType =
+  // Cron/automated notifications
   | "bill_due"
   | "bill_overdue"
   | "low_balance"
   | "recurring_created"
-  | "payment_reminder";
+  | "payment_reminder"
+  // CRUD operation notifications
+  | "item_created"
+  | "item_updated"
+  | "item_deleted"
+  | "item_restored"
+  // Info notifications
+  | "info"
+  | "success"
+  | "warning"
+  | "error";
 
 // ============================================================
 // NOTIFICATION TYPES

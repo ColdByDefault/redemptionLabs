@@ -16,6 +16,14 @@ export function getNotificationIcon(type: NotificationType): string {
     low_balance: "💰",
     recurring_created: "🔄",
     payment_reminder: "💳",
+    item_created: "✨",
+    item_updated: "✏️",
+    item_deleted: "🗑️",
+    item_restored: "♻️",
+    info: "ℹ️",
+    success: "✅",
+    warning: "⚠️",
+    error: "❌",
   };
   return icons[type];
 }
@@ -27,6 +35,14 @@ export function getNotificationTitle(type: NotificationType): string {
     low_balance: "Low Balance Alert",
     recurring_created: "Recurring Entry Created",
     payment_reminder: "Payment Reminder",
+    item_created: "Item Created",
+    item_updated: "Item Updated",
+    item_deleted: "Item Deleted",
+    item_restored: "Item Restored",
+    info: "Information",
+    success: "Success",
+    warning: "Warning",
+    error: "Error",
   };
   return titles[type];
 }
@@ -38,6 +54,14 @@ export function getNotificationColor(type: NotificationType): string {
     low_balance: "text-orange-500",
     recurring_created: "text-blue-500",
     payment_reminder: "text-purple-500",
+    item_created: "text-green-500",
+    item_updated: "text-blue-500",
+    item_deleted: "text-red-500",
+    item_restored: "text-green-500",
+    info: "text-blue-500",
+    success: "text-green-500",
+    warning: "text-yellow-500",
+    error: "text-red-500",
   };
   return colors[type];
 }
@@ -49,6 +73,14 @@ export function getNotificationBgColor(type: NotificationType): string {
     low_balance: "bg-orange-500/10",
     recurring_created: "bg-blue-500/10",
     payment_reminder: "bg-purple-500/10",
+    item_created: "bg-green-500/10",
+    item_updated: "bg-blue-500/10",
+    item_deleted: "bg-red-500/10",
+    item_restored: "bg-green-500/10",
+    info: "bg-blue-500/10",
+    success: "bg-green-500/10",
+    warning: "bg-yellow-500/10",
+    error: "bg-red-500/10",
   };
   return colors[type];
 }

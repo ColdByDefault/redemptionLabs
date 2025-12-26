@@ -1,96 +1,74 @@
-import { toast, type ExternalToast } from "sonner";
+import { createNotification } from "@/actions/notification";
+import type { NotificationType } from "@/types/notification";
 
 // ============================================================
 // TYPES
 // ============================================================
 
-type ToastType = "success" | "error" | "info" | "warning" | "message";
+type NotifyType = "success" | "error" | "info" | "warning";
 
-interface QueuedToast {
-  type: ToastType;
-  message: string;
-  options: ExternalToast | undefined;
+interface NotifyOptions {
+  /** Custom notification type override */
+  notificationType?: NotificationType;
+  /** Entity ID to link the notification to */
+  entityId?: string;
+  /** Description for additional context */
+  description?: string;
 }
 
-// ============================================================
-// QUEUE STATE
-// ============================================================
-
-const queue: QueuedToast[] = [];
-let isProcessing = false;
-const DEFAULT_DURATION = 3000; // 3 seconds default
-
-// ============================================================
-// QUEUE PROCESSING
-// ============================================================
-
-function processQueue(): void {
-  if (isProcessing || queue.length === 0) return;
-
-  isProcessing = true;
-  const item = queue.shift();
-
-  if (!item) {
-    isProcessing = false;
-    return;
-  }
-
-  const duration = item.options?.duration ?? DEFAULT_DURATION;
-
-  // Show the toast
-  switch (item.type) {
-    case "success":
-      toast.success(item.message, item.options);
-      break;
-    case "error":
-      toast.error(item.message, item.options);
-      break;
-    case "info":
-      toast.info(item.message, item.options);
-      break;
-    case "warning":
-      toast.warning(item.message, item.options);
-      break;
-    case "message":
-    default:
-      toast.message(item.message, item.options);
-      break;
-  }
-
-  // Wait for toast duration + small buffer, then process next
-  setTimeout(() => {
-    isProcessing = false;
-    processQueue();
-  }, duration + 300); // 300ms buffer for animation
-}
+// Map notify types to notification types
+const notifyToNotificationType: Record<NotifyType, NotificationType> = {
+  success: "success",
+  error: "error",
+  info: "info",
+  warning: "warning",
+};
 
 // ============================================================
-// QUEUE API
+// NOTIFICATION API
 // ============================================================
 
-function enqueue(
-  type: ToastType,
+function sendNotification(
+  type: NotifyType,
   message: string,
-  options?: ExternalToast
+  options?: NotifyOptions
 ): void {
-  queue.push({ type, message, options });
-  processQueue();
+  const notifType = options?.notificationType ?? notifyToNotificationType[type];
+  const fullMessage = options?.description
+    ? `${message} - ${options.description}`
+    : message;
+
+  // Create notification (fire and forget)
+  createNotification({
+    type: notifType,
+    message: fullMessage,
+    entityId: options?.entityId ?? null,
+  }).catch((err) => {
+    console.error("Failed to create notification:", err);
+  });
 }
 
+/**
+ * Notification API - replaces toast system
+ * All notifications are saved to the notification center
+ */
 export const queuedToast = {
-  success: (message: string, options?: ExternalToast): void => {
-    enqueue("success", message, options);
+  success: (message: string, options?: NotifyOptions): void => {
+    sendNotification("success", message, options);
   },
-  error: (message: string, options?: ExternalToast): void => {
-    enqueue("error", message, options);
+  error: (message: string, options?: NotifyOptions): void => {
+    sendNotification("error", message, options);
   },
-  info: (message: string, options?: ExternalToast): void => {
-    enqueue("info", message, options);
+  info: (message: string, options?: NotifyOptions): void => {
+    sendNotification("info", message, options);
   },
-  warning: (message: string, options?: ExternalToast): void => {
-    enqueue("warning", message, options);
+  warning: (message: string, options?: NotifyOptions): void => {
+    sendNotification("warning", message, options);
   },
-  message: (message: string, options?: ExternalToast): void => {
-    enqueue("message", message, options);
+  message: (message: string, options?: NotifyOptions): void => {
+    sendNotification("info", message, options);
   },
 };
+
+/** Modern notification API alias */
+export const notify = queuedToast;
