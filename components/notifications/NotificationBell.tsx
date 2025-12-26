@@ -17,6 +17,12 @@ import {
   deleteNotification,
 } from "@/actions/notification";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 // ============================================================
@@ -152,22 +158,33 @@ export function NotificationBell({
   return (
     <div className="relative">
       {/* Bell Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={`Notifications${
-          optimisticUnreadCount > 0 ? ` (${optimisticUnreadCount} unread)` : ""
-        }`}
-      >
-        <Bell className="h-[1.2rem] w-[1.2rem]" />
-        {optimisticUnreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
-            {optimisticUnreadCount > 99 ? "99+" : optimisticUnreadCount}
-          </span>
-        )}
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative cursor-pointer"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label={`Notifications${
+                optimisticUnreadCount > 0
+                  ? ` (${optimisticUnreadCount} unread)`
+                  : ""
+              }`}
+            >
+              <Bell className="h-[1.2rem] w-[1.2rem]" />
+              {optimisticUnreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                  {optimisticUnreadCount > 99 ? "99+" : optimisticUnreadCount}
+                </span>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Notifications</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       {/* Dropdown Panel */}
       {isOpen && (
