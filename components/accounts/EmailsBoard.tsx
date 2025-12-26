@@ -20,7 +20,7 @@ import {
   formatBillingCycle,
   formatPrice,
 } from "@/lib/account";
-import { EmailDialog } from "./EmailDialog";
+import { AccountsDialog } from "./AccountsDialog";
 import { PasswordDialog } from "./PasswordDialog";
 
 interface EmailsBoardProps {
@@ -37,7 +37,8 @@ export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
             {emails.length} emails
           </span>
         </div>
-        <EmailDialog
+        <AccountsDialog
+          entityType="email"
           mode="create"
           trigger={
             <Button size="sm" className="cursor-pointer">
@@ -114,9 +115,10 @@ export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
                     {email.notes || "-"}
                   </TableCell>
                   <TableCell>
-                    <EmailDialog
+                    <AccountsDialog
+                      entityType="email"
                       mode="edit"
-                      email={email}
+                      entity={email}
                       trigger={
                         <Button
                           variant="ghost"

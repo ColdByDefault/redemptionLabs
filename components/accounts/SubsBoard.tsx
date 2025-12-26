@@ -21,7 +21,7 @@ import {
   formatPrice,
   formatDate,
 } from "@/lib/account";
-import { AccountDialog } from "./AccountDialog";
+import { AccountsDialog } from "./AccountsDialog";
 import { PasswordDialog } from "./PasswordDialog";
 
 interface SubsBoardProps {
@@ -42,7 +42,8 @@ export function SubsBoard({
             {accounts.length} accounts
           </span>
         </div>
-        <AccountDialog
+        <AccountsDialog
+          entityType="account"
           mode="create"
           emails={emails}
           trigger={
@@ -127,9 +128,10 @@ export function SubsBoard({
                     {account.notes || "-"}
                   </TableCell>
                   <TableCell>
-                    <AccountDialog
+                    <AccountsDialog
+                      entityType="account"
                       mode="edit"
-                      account={account}
+                      entity={account}
                       emails={emails}
                       trigger={
                         <Button
