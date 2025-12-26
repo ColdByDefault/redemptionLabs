@@ -13,6 +13,7 @@ import type {
   SectionName,
   SectionTimestamp,
   DashboardData,
+  ChartRawData,
 } from "@/types/finance";
 
 // ============================================================
@@ -161,4 +162,22 @@ export async function getDashboardData(): Promise<DashboardData> {
     oneTimeBills,
     banks
   );
+}
+
+// ============================================================
+// CHART DATA ACTION
+// ============================================================
+
+export async function getChartData(): Promise<ChartRawData> {
+  const [incomes, recurringExpenses, banks] = await Promise.all([
+    getIncomes(),
+    getRecurringExpenses(),
+    getBanks(),
+  ]);
+
+  return {
+    incomes,
+    recurringExpenses,
+    banks,
+  };
 }

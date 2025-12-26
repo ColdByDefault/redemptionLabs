@@ -160,6 +160,16 @@ export interface DashboardData {
 }
 
 // ============================================================
+// CHART DATA TYPES (for dashboard visualizations)
+// ============================================================
+
+export interface ChartRawData {
+  incomes: Income[];
+  recurringExpenses: RecurringExpense[];
+  banks: Bank[];
+}
+
+// ============================================================
 // SECTION TIMESTAMP TYPES
 // ============================================================
 

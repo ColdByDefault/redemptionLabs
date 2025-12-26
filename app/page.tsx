@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { navLinks } from "@/data/navbar";
-import { getDashboardData } from "@/actions/finance";
+import { getDashboardData, getChartData } from "@/actions/finance";
 import { Dashboard } from "@/components/dashboard";
+import { FinanceCharts } from "@/components/charts";
 
 export default async function Home(): Promise<React.ReactElement> {
-  const dashboardData = await getDashboardData();
+  const [dashboardData, chartData] = await Promise.all([
+    getDashboardData(),
+    getChartData(),
+  ]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -19,6 +23,16 @@ export default async function Home(): Promise<React.ReactElement> {
 
         {/* Dashboard */}
         <Dashboard data={dashboardData} />
+
+        {/* Charts Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-6">Financial Analytics</h2>
+          <FinanceCharts
+            incomes={chartData.incomes}
+            expenses={chartData.recurringExpenses}
+            banks={chartData.banks}
+          />
+        </div>
 
         {/* Quick Links */}
         <div className="mt-8 flex gap-4">
