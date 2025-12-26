@@ -172,6 +172,22 @@ export function AccountsDialog({
             mode === "create" ? "created" : "updated"
           } successfully`
         );
+
+        // Show additional toast if expense was auto-added
+        if (
+          mode === "create" &&
+          "expenseAdded" in result &&
+          result.expenseAdded
+        ) {
+          const expenseType =
+            result.expenseAdded === "recurring"
+              ? "recurring expenses"
+              : "one-time bills";
+          toast.info(`Added to ${expenseType} in Finance`, {
+            description: "The paid subscription was automatically tracked.",
+          });
+        }
+
         setOpen(false);
         if (mode === "create") resetForm();
       } else {

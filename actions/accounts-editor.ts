@@ -8,6 +8,7 @@ import type {
   BillingCycle,
   AuthMethod,
 } from "@/types/account";
+import type { RecurringCycle } from "@/types/finance";
 
 // ============================================================
 // EMAIL CRUD
@@ -38,7 +39,11 @@ export interface UpdateEmailInput {
 
 export async function createEmail(
   input: CreateEmailInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  expenseAdded?: "recurring" | "onetime";
+}> {
   try {
     await prisma.email.create({
       data: {
@@ -52,8 +57,55 @@ export async function createEmail(
         notes: input.notes ?? null,
       },
     });
+
+    let expenseAdded: "recurring" | "onetime" | undefined;
+
+    // Auto-add to finance if paid email with price
+    if (input.tier === "paid" && input.price && input.price > 0) {
+      const emailName = input.alias || input.email;
+
+      if (input.billingCycle === "monthly" || input.billingCycle === "yearly") {
+        // Add to recurring expenses
+        await prisma.recurringExpense.create({
+          data: {
+            name: `Email: ${emailName}`,
+            amount: input.price,
+            dueDate: null,
+            cycle: input.billingCycle as RecurringCycle,
+            trialType: "none",
+            trialEndDate: null,
+            category: "subscription",
+            linkedCreditId: null,
+            linkedDebtId: null,
+            notes: `Auto-added from email: ${input.email}`,
+          },
+        });
+        expenseAdded = "recurring";
+      } else if (
+        input.billingCycle === "onetime" ||
+        input.billingCycle === "lifetime"
+      ) {
+        // Add to one-time bills
+        await prisma.oneTimeBill.create({
+          data: {
+            name: `Email: ${emailName}`,
+            amount: input.price,
+            payTo: "Email Provider",
+            dueDate: null,
+            isPaid: false,
+            notes: `Auto-added from email: ${input.email}`,
+          },
+        });
+        expenseAdded = "onetime";
+      }
+
+      if (expenseAdded) {
+        revalidatePath("/finance");
+      }
+    }
+
     revalidatePath("/accounts");
-    return { success: true };
+    return { success: true, expenseAdded };
   } catch (error) {
     console.error("Failed to create email:", error);
     return { success: false, error: "Failed to create email" };
@@ -125,7 +177,11 @@ export interface UpdateAccountInput {
 
 export async function createAccount(
   input: CreateAccountInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  expenseAdded?: "recurring" | "onetime";
+}> {
   try {
     await prisma.account.create({
       data: {
@@ -141,8 +197,53 @@ export async function createAccount(
         emailId: input.emailId,
       },
     });
+
+    let expenseAdded: "recurring" | "onetime" | undefined;
+
+    // Auto-add to finance if paid account with price
+    if (input.tier === "paid" && input.price && input.price > 0) {
+      if (input.billingCycle === "monthly" || input.billingCycle === "yearly") {
+        // Add to recurring expenses
+        await prisma.recurringExpense.create({
+          data: {
+            name: input.provider,
+            amount: input.price,
+            dueDate: input.dueDate ?? null,
+            cycle: input.billingCycle as RecurringCycle,
+            trialType: "none",
+            trialEndDate: null,
+            category: "subscription",
+            linkedCreditId: null,
+            linkedDebtId: null,
+            notes: `Auto-added from account: ${input.provider}`,
+          },
+        });
+        expenseAdded = "recurring";
+      } else if (
+        input.billingCycle === "onetime" ||
+        input.billingCycle === "lifetime"
+      ) {
+        // Add to one-time bills
+        await prisma.oneTimeBill.create({
+          data: {
+            name: input.provider,
+            amount: input.price,
+            payTo: input.provider,
+            dueDate: input.dueDate ?? null,
+            isPaid: false,
+            notes: `Auto-added from account: ${input.provider}`,
+          },
+        });
+        expenseAdded = "onetime";
+      }
+
+      if (expenseAdded) {
+        revalidatePath("/finance");
+      }
+    }
+
     revalidatePath("/accounts");
-    return { success: true };
+    return { success: true, expenseAdded };
   } catch (error) {
     console.error("Failed to create account:", error);
     return { success: false, error: "Failed to create account" };
