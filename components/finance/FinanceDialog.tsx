@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { queuedToast } from "@/store";
 import {
   Dialog,
   DialogContent,
@@ -245,7 +245,7 @@ export function FinanceDialog({
         mode === "create" ? await handleCreate() : await handleUpdate();
 
       if (result.success) {
-        toast.success(
+        queuedToast.success(
           `${label.singular} ${
             mode === "create" ? "created" : "updated"
           } successfully`
@@ -253,12 +253,12 @@ export function FinanceDialog({
         setOpen(false);
         if (mode === "create") resetForm();
       } else {
-        toast.error(
+        queuedToast.error(
           result.error ?? `Failed to ${mode} ${label.singular.toLowerCase()}`
         );
       }
     } catch {
-      toast.error("An unexpected error occurred");
+      queuedToast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -448,15 +448,15 @@ export function FinanceDialog({
       }
 
       if (result.success) {
-        toast.success(`${label.singular} deleted successfully`);
+        queuedToast.success(`${label.singular} deleted successfully`);
         setOpen(false);
       } else {
-        toast.error(
+        queuedToast.error(
           result.error ?? `Failed to delete ${label.singular.toLowerCase()}`
         );
       }
     } catch {
-      toast.error("An unexpected error occurred");
+      queuedToast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }

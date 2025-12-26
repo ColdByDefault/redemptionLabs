@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Eye, Copy, Check } from "lucide-react";
-import { toast } from "sonner";
+import { queuedToast } from "@/store";
 import {
   Dialog,
   DialogContent,
@@ -33,10 +33,10 @@ export function PasswordDialog({
     try {
       await navigator.clipboard.writeText(password);
       setCopied(true);
-      toast.success("Password copied to clipboard");
+      queuedToast.success("Password copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy password");
+      queuedToast.error("Failed to copy password");
     }
   }
 

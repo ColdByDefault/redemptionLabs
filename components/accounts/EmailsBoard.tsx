@@ -23,12 +23,17 @@ import {
 } from "@/lib/account";
 import { AccountsDialog } from "./AccountsDialog";
 import { PasswordDialog } from "./PasswordDialog";
+import { formatRelativeTime } from "@/lib/finance";
 
 interface EmailsBoardProps {
   emails: EmailWithAccounts[];
+  updatedAt: Date | null;
 }
 
-export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
+export function EmailsBoard({
+  emails,
+  updatedAt,
+}: EmailsBoardProps): React.ReactElement {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -37,6 +42,11 @@ export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
           <span className="text-sm text-muted-foreground">
             {emails.length} emails
           </span>
+          {updatedAt && (
+            <span className="text-sm text-muted-foreground">
+              • Updated {formatRelativeTime(updatedAt)}
+            </span>
+          )}
         </div>
         <AccountsDialog
           entityType="email"

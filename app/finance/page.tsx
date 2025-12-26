@@ -1,14 +1,19 @@
-import { getAllFinanceData } from "@/actions/finance";
+import { getAllFinanceData, getSectionTimestamps } from "@/actions/finance";
 import {
   IncomeSummaryBoard,
   RecurringExpensesBoard,
   OneTimeBillsBoard,
   BanksBoard,
 } from "@/components/finance";
+import { SectionHeader } from "@/components/ui/section-header";
 
 export default async function FinancePage(): Promise<React.ReactElement> {
+  const [financeData, timestamps] = await Promise.all([
+    getAllFinanceData(),
+    getSectionTimestamps(),
+  ]);
   const { incomes, debts, credits, recurringExpenses, oneTimeBills, banks } =
-    await getAllFinanceData();
+    financeData;
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -21,13 +26,18 @@ export default async function FinancePage(): Promise<React.ReactElement> {
 
       {/* Part 4: Banks */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Bank Accounts</h2>
+        <SectionHeader title="Bank Accounts" updatedAt={timestamps.banks} />
         <BanksBoard banks={banks} />
       </section>
 
+      <hr className="border-border" />
+
       {/* Part 1: Income, Debts & Credits Summary */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Income & Debts Overview</h2>
+        <SectionHeader
+          title="Income & Debts Overview"
+          updatedAt={timestamps.income_overview}
+        />
         <IncomeSummaryBoard
           incomes={incomes}
           debts={debts}
@@ -37,9 +47,14 @@ export default async function FinancePage(): Promise<React.ReactElement> {
         />
       </section>
 
+      <hr className="border-border" />
+
       {/* Part 2: Recurring Monthly Expenses */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Recurring Expenses</h2>
+        <SectionHeader
+          title="Recurring Expenses"
+          updatedAt={timestamps.recurring_expenses}
+        />
         <RecurringExpensesBoard
           expenses={recurringExpenses}
           credits={credits}
@@ -48,9 +63,14 @@ export default async function FinancePage(): Promise<React.ReactElement> {
         />
       </section>
 
+      <hr className="border-border" />
+
       {/* Part 3: One-Time Bills */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">One-Time Bills</h2>
+        <SectionHeader
+          title="One-Time Bills"
+          updatedAt={timestamps.one_time_bills}
+        />
         <OneTimeBillsBoard bills={oneTimeBills} banks={banks} />
       </section>
     </div>

@@ -212,3 +212,24 @@ model Bank {
 
   @@map("banks")
 }
+
+// ============================================================
+// SECTION TIMESTAMPS
+// ============================================================
+
+enum SectionName {
+  emails
+  accounts
+  banks
+  income_overview
+  recurring_expenses
+  one_time_bills
+}
+
+model SectionTimestamp {
+  id        String      @id @default(cuid())
+  section   SectionName @unique
+  updatedAt DateTime    @default(now())
+
+  @@map("section_timestamps")
+}

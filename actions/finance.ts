@@ -8,6 +8,8 @@ import type {
   RecurringExpense,
   OneTimeBill,
   Bank,
+  SectionName,
+  SectionTimestamp,
 } from "@/types/finance";
 
 // ============================================================
@@ -88,4 +90,48 @@ export async function getAllFinanceData(): Promise<FinanceData> {
     oneTimeBills,
     banks,
   };
+}
+
+// ============================================================
+// SECTION TIMESTAMPS
+// ============================================================
+
+export async function getSectionTimestamps(): Promise<
+  Record<SectionName, Date | null>
+> {
+  const timestamps = await prisma.sectionTimestamp.findMany();
+
+  const result: Record<SectionName, Date | null> = {
+    emails: null,
+    accounts: null,
+    banks: null,
+    income_overview: null,
+    recurring_expenses: null,
+    one_time_bills: null,
+  };
+
+  for (const ts of timestamps) {
+    result[ts.section as SectionName] = ts.updatedAt;
+  }
+
+  return result;
+}
+
+export async function getSectionTimestamp(
+  section: SectionName
+): Promise<SectionTimestamp | null> {
+  const timestamp = await prisma.sectionTimestamp.findUnique({
+    where: { section },
+  });
+  return timestamp as SectionTimestamp | null;
+}
+
+export async function updateSectionTimestamp(
+  section: SectionName
+): Promise<void> {
+  await prisma.sectionTimestamp.upsert({
+    where: { section },
+    update: { updatedAt: new Date() },
+    create: { section, updatedAt: new Date() },
+  });
 }

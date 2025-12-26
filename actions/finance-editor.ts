@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { updateSectionTimestamp } from "@/actions/finance";
 import type {
   PaymentCycle,
   RecurringCycle,
@@ -44,6 +45,7 @@ export async function createIncome(
         notes: input.notes ?? null,
       },
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -61,6 +63,7 @@ export async function updateIncome(
       where: { id },
       data,
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -76,6 +79,7 @@ export async function deleteIncome(
     await prisma.income.delete({
       where: { id },
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -130,6 +134,7 @@ export async function createDebt(
         notes: input.notes ?? null,
       },
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -147,6 +152,7 @@ export async function updateDebt(
       where: { id },
       data,
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -162,6 +168,7 @@ export async function deleteDebt(
     await prisma.debt.delete({
       where: { id },
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -207,6 +214,7 @@ export async function createCredit(
         notes: input.notes ?? null,
       },
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -224,6 +232,7 @@ export async function updateCredit(
       where: { id },
       data,
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -239,6 +248,7 @@ export async function deleteCredit(
     await prisma.credit.delete({
       where: { id },
     });
+    await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -299,6 +309,7 @@ export async function createRecurringExpense(
         notes: input.notes ?? null,
       },
     });
+    await updateSectionTimestamp("recurring_expenses");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -316,6 +327,7 @@ export async function updateRecurringExpense(
       where: { id },
       data,
     });
+    await updateSectionTimestamp("recurring_expenses");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -331,6 +343,7 @@ export async function deleteRecurringExpense(
     await prisma.recurringExpense.delete({
       where: { id },
     });
+    await updateSectionTimestamp("recurring_expenses");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -379,6 +392,7 @@ export async function createOneTimeBill(
         notes: input.notes ?? null,
       },
     });
+    await updateSectionTimestamp("one_time_bills");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -396,6 +410,7 @@ export async function updateOneTimeBill(
       where: { id },
       data,
     });
+    await updateSectionTimestamp("one_time_bills");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -411,6 +426,7 @@ export async function deleteOneTimeBill(
     await prisma.oneTimeBill.delete({
       where: { id },
     });
+    await updateSectionTimestamp("one_time_bills");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -451,6 +467,7 @@ export async function createBank(
         notes: input.notes ?? null,
       },
     });
+    await updateSectionTimestamp("banks");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -473,6 +490,7 @@ export async function updateBank(
       where: { id },
       data,
     });
+    await updateSectionTimestamp("banks");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {
@@ -488,6 +506,7 @@ export async function deleteBank(
     await prisma.bank.delete({
       where: { id },
     });
+    await updateSectionTimestamp("banks");
     revalidatePath("/finance");
     return { success: true };
   } catch (error) {

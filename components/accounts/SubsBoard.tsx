@@ -24,17 +24,20 @@ import {
 } from "@/lib/account";
 import { AccountsDialog } from "./AccountsDialog";
 import { PasswordDialog } from "./PasswordDialog";
+import { formatRelativeTime } from "@/lib/finance";
 
 interface SubsBoardProps {
   accounts: AccountWithEmail[];
   emails: Email[];
   banks: Bank[];
+  updatedAt: Date | null;
 }
 
 export function SubsBoard({
   accounts,
   emails,
   banks,
+  updatedAt,
 }: SubsBoardProps): React.ReactElement {
   return (
     <div className="space-y-4">
@@ -44,6 +47,11 @@ export function SubsBoard({
           <span className="text-sm text-muted-foreground">
             {accounts.length} accounts
           </span>
+          {updatedAt && (
+            <span className="text-sm text-muted-foreground">
+              • Updated {formatRelativeTime(updatedAt)}
+            </span>
+          )}
         </div>
         <AccountsDialog
           entityType="account"

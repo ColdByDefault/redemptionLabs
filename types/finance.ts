@@ -126,3 +126,21 @@ export interface FinanceSummary {
   totalCredits: number;
   totalBankBalance: number;
 }
+
+// ============================================================
+// SECTION TIMESTAMP TYPES
+// ============================================================
+
+export type SectionName =
+  | "emails"
+  | "accounts"
+  | "banks"
+  | "income_overview"
+  | "recurring_expenses"
+  | "one_time_bills";
+
+export interface SectionTimestamp {
+  id: string;
+  section: SectionName;
+  updatedAt: Date;
+}

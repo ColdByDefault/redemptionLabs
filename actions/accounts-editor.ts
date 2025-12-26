@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { updateSectionTimestamp } from "@/actions/finance";
 import type {
   EmailCategory,
   AccountTier,
@@ -104,6 +105,7 @@ export async function createEmail(input: CreateEmailInput): Promise<{
       }
     }
 
+    await updateSectionTimestamp("emails");
     revalidatePath("/accounts");
     return { success: true, expenseAdded };
   } catch (error) {
@@ -121,6 +123,7 @@ export async function updateEmail(
       where: { id },
       data,
     });
+    await updateSectionTimestamp("emails");
     revalidatePath("/accounts");
     return { success: true };
   } catch (error) {
@@ -161,6 +164,7 @@ export async function deleteEmail(
       where: { id },
     });
 
+    await updateSectionTimestamp("emails");
     revalidatePath("/accounts");
     revalidatePath("/finance");
     return { success: true };
@@ -288,6 +292,7 @@ export async function createAccount(input: CreateAccountInput): Promise<{
       }
     }
 
+    await updateSectionTimestamp("accounts");
     revalidatePath("/accounts");
     return { success: true, expenseAdded };
   } catch (error) {
@@ -329,6 +334,7 @@ export async function updateAccount(
       where: { id },
       data,
     });
+    await updateSectionTimestamp("accounts");
     revalidatePath("/accounts");
     return { success: true };
   } catch (error) {
@@ -369,6 +375,7 @@ export async function deleteAccount(
       where: { id },
     });
 
+    await updateSectionTimestamp("accounts");
     revalidatePath("/accounts");
     revalidatePath("/finance");
     return { success: true };
