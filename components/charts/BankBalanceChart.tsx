@@ -103,20 +103,24 @@ export function BankBalanceChart({
                 />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#6b7280"
+              opacity={0.3}
+            />
             <XAxis
               dataKey="date"
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              tickLine={{ stroke: "hsl(var(--border))" }}
-              axisLine={{ stroke: "hsl(var(--border))" }}
+              tick={{ fill: "#9ca3af", fontSize: 12 }}
+              tickLine={{ stroke: "#6b7280" }}
+              axisLine={{ stroke: "#6b7280" }}
               interval="preserveStartEnd"
             />
             <YAxis
               domain={yDomain}
               tickFormatter={formatChartCurrency}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              tickLine={{ stroke: "hsl(var(--border))" }}
-              axisLine={{ stroke: "hsl(var(--border))" }}
+              tick={{ fill: "#9ca3af", fontSize: 12 }}
+              tickLine={{ stroke: "#6b7280" }}
+              axisLine={{ stroke: "#6b7280" }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Area

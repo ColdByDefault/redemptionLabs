@@ -88,18 +88,22 @@ export function IncomeExpensesLineChart({
             data={data.points}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#6b7280"
+              opacity={0.3}
+            />
             <XAxis
               dataKey="month"
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              tickLine={{ stroke: "hsl(var(--border))" }}
-              axisLine={{ stroke: "hsl(var(--border))" }}
+              tick={{ fill: "#9ca3af", fontSize: 12 }}
+              tickLine={{ stroke: "#6b7280" }}
+              axisLine={{ stroke: "#6b7280" }}
             />
             <YAxis
               tickFormatter={formatChartCurrency}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              tickLine={{ stroke: "hsl(var(--border))" }}
-              axisLine={{ stroke: "hsl(var(--border))" }}
+              tick={{ fill: "#9ca3af", fontSize: 12 }}
+              tickLine={{ stroke: "#6b7280" }}
+              axisLine={{ stroke: "#6b7280" }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend

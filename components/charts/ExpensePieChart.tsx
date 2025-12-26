@@ -61,10 +61,35 @@ function CustomTooltip({
   );
 }
 
-function renderCustomLabel(props: LabelRenderProps): string {
-  const { name, percentage } = props;
-  if (!name || percentage === undefined) return "";
-  return `${name}: ${formatChartPercentage(percentage)}`;
+function renderCustomLabel(props: LabelRenderProps): React.ReactElement | null {
+  const { name, percentage, cx, cy, midAngle, outerRadius } = props;
+  if (
+    !name ||
+    percentage === undefined ||
+    cx === undefined ||
+    cy === undefined ||
+    midAngle === undefined ||
+    outerRadius === undefined
+  )
+    return null;
+
+  const RADIAN = Math.PI / 180;
+  const radius = outerRadius + 25;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#9ca3af"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={12}
+    >
+      {`${name}: ${formatChartPercentage(percentage)}`}
+    </text>
+  );
 }
 
 export function ExpensePieChart({
