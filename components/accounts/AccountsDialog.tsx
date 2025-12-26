@@ -24,11 +24,10 @@ import {
 import {
   createAccount,
   updateAccount,
-  deleteAccount,
   createEmail,
   updateEmail,
-  deleteEmail,
 } from "@/actions/accounts-editor";
+import { softDeleteAccount, softDeleteEmail } from "@/actions/trash";
 import type {
   Account,
   Email,
@@ -336,17 +335,17 @@ export function AccountsDialog({
       let result: { success: boolean; error?: string };
       switch (entityType) {
         case "account":
-          result = await deleteAccount(entity.id);
+          result = await softDeleteAccount(entity.id);
           break;
         case "email":
-          result = await deleteEmail(entity.id);
+          result = await softDeleteEmail(entity.id);
           break;
         default:
           result = { success: false, error: "Unknown entity type" };
       }
 
       if (result.success) {
-        queuedToast.success(`${label.singular} deleted successfully`);
+        queuedToast.success(`${label.singular} moved to trash`);
         setOpen(false);
       } else {
         queuedToast.error(

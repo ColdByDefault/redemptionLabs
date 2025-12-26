@@ -1,0 +1,1 @@
+export { TrashTable } from "./TrashTable";

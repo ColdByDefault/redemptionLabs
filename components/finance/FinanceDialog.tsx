@@ -23,23 +23,25 @@ import {
 import {
   createIncome,
   updateIncome,
-  deleteIncome,
   createDebt,
   updateDebt,
-  deleteDebt,
   createCredit,
   updateCredit,
-  deleteCredit,
   createRecurringExpense,
   updateRecurringExpense,
-  deleteRecurringExpense,
   createOneTimeBill,
   updateOneTimeBill,
-  deleteOneTimeBill,
   createBank,
   updateBank,
-  deleteBank,
 } from "@/actions/finance-editor";
+import {
+  softDeleteIncome,
+  softDeleteDebt,
+  softDeleteCredit,
+  softDeleteRecurringExpense,
+  softDeleteOneTimeBill,
+  softDeleteBank,
+} from "@/actions/trash";
 import { formatDateForInput } from "@/lib/finance";
 import type {
   Income,
@@ -426,29 +428,29 @@ export function FinanceDialog({
       let result: { success: boolean; error?: string };
       switch (entityType) {
         case "income":
-          result = await deleteIncome(entity.id);
+          result = await softDeleteIncome(entity.id);
           break;
         case "debt":
-          result = await deleteDebt(entity.id);
+          result = await softDeleteDebt(entity.id);
           break;
         case "credit":
-          result = await deleteCredit(entity.id);
+          result = await softDeleteCredit(entity.id);
           break;
         case "recurringExpense":
-          result = await deleteRecurringExpense(entity.id);
+          result = await softDeleteRecurringExpense(entity.id);
           break;
         case "oneTimeBill":
-          result = await deleteOneTimeBill(entity.id);
+          result = await softDeleteOneTimeBill(entity.id);
           break;
         case "bank":
-          result = await deleteBank(entity.id);
+          result = await softDeleteBank(entity.id);
           break;
         default:
           result = { success: false, error: "Unknown entity type" };
       }
 
       if (result.success) {
-        queuedToast.success(`${label.singular} deleted successfully`);
+        queuedToast.success(`${label.singular} moved to trash`);
         setOpen(false);
       } else {
         queuedToast.error(

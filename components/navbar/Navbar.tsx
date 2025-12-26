@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { navLinks } from "@/data/navbar";
 import { ModeToggle } from "@/components/theme";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function Navbar(): React.ReactElement {
@@ -36,7 +38,22 @@ export function Navbar(): React.ReactElement {
             ))}
           </div>
         </div>
-        <ModeToggle />
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/trash">
+              <Trash2
+                className={cn(
+                  "h-[1.2rem] w-[1.2rem]",
+                  pathname === "/trash"
+                    ? "text-zinc-900 dark:text-zinc-100"
+                    : "text-zinc-500 dark:text-zinc-400"
+                )}
+              />
+              <span className="sr-only">Trash</span>
+            </Link>
+          </Button>
+          <ModeToggle />
+        </div>
       </div>
     </nav>
   );
