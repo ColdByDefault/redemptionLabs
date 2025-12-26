@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil } from "lucide-react";
 import type { AccountWithEmail, Email } from "@/types/account";
 import {
   Table,
@@ -15,13 +16,13 @@ import {
   getAccountTierColor,
   getBillingCycleVariant,
   getAuthMethodVariant,
-  getEmailAliasColor,
   formatBillingCycle,
   formatAuthMethod,
   formatPrice,
   formatDate,
 } from "@/lib/account";
 import { AccountDialog } from "./AccountDialog";
+import { PasswordDialog } from "./PasswordDialog";
 
 interface SubsBoardProps {
   accounts: AccountWithEmail[];
@@ -44,7 +45,11 @@ export function SubsBoard({
         <AccountDialog
           mode="create"
           emails={emails}
-          trigger={<Button size="sm">Add Account</Button>}
+          trigger={
+            <Button size="sm" className="cursor-pointer">
+              Add Account
+            </Button>
+          }
         />
       </div>
       <div className="rounded-md border overflow-x-auto">
@@ -103,17 +108,15 @@ export function SubsBoard({
                     </Badge>
                   </TableCell>
                   <TableCell>{account.username || "-"}</TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {account.password || "-"}
+                  <TableCell>
+                    <PasswordDialog
+                      password={account.password}
+                      label="Account Password"
+                    />
                   </TableCell>
                   <TableCell>
                     {account.email.alias ? (
-                      <Badge
-                        className={getEmailAliasColor(account.email.alias)}
-                      >
-                        {account.email.alias.charAt(0).toUpperCase() +
-                          account.email.alias.slice(1)}
-                      </Badge>
+                      <Badge>{account.email.alias}</Badge>
                     ) : (
                       <span className="max-w-32 truncate block">
                         {account.email.email}
@@ -129,8 +132,12 @@ export function SubsBoard({
                       account={account}
                       emails={emails}
                       trigger={
-                        <Button variant="ghost" size="sm">
-                          Edit
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="cursor-pointer"
+                        >
+                          <Pencil className="h-4 w-4" />
                         </Button>
                       }
                     />

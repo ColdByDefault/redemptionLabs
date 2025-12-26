@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil } from "lucide-react";
 import type { EmailWithAccounts } from "@/types/account";
 import {
   Table,
@@ -14,12 +15,13 @@ import { Button } from "@/components/ui/button";
 import {
   getEmailCategoryColor,
   getAccountTierColor,
-  getEmailAliasColor,
+  getBillingCycleVariant,
   formatEmailCategory,
   formatBillingCycle,
   formatPrice,
 } from "@/lib/account";
 import { EmailDialog } from "./EmailDialog";
+import { PasswordDialog } from "./PasswordDialog";
 
 interface EmailsBoardProps {
   emails: EmailWithAccounts[];
@@ -37,7 +39,11 @@ export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
         </div>
         <EmailDialog
           mode="create"
-          trigger={<Button size="sm">Add Email</Button>}
+          trigger={
+            <Button size="sm" className="cursor-pointer">
+              Add Email
+            </Button>
+          }
         />
       </div>
       <div className="rounded-md border overflow-x-auto">
@@ -71,14 +77,7 @@ export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
                 <TableRow key={email.id}>
                   <TableCell className="font-medium">{email.email}</TableCell>
                   <TableCell>
-                    {email.alias ? (
-                      <Badge className={getEmailAliasColor(email.alias)}>
-                        {email.alias.charAt(0).toUpperCase() +
-                          email.alias.slice(1)}
-                      </Badge>
-                    ) : (
-                      "-"
-                    )}
+                    {email.alias ? <Badge>{email.alias}</Badge> : "-"}
                   </TableCell>
                   <TableCell>
                     <Badge className={getEmailCategoryColor(email.category)}>
@@ -92,10 +91,21 @@ export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
                   </TableCell>
                   <TableCell>{formatPrice(email.price)}</TableCell>
                   <TableCell>
-                    {formatBillingCycle(email.billingCycle)}
+                    {email.billingCycle ? (
+                      <Badge
+                        variant={getBillingCycleVariant(email.billingCycle)}
+                      >
+                        {formatBillingCycle(email.billingCycle)}
+                      </Badge>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {email.password || "-"}
+                  <TableCell>
+                    <PasswordDialog
+                      password={email.password}
+                      label="Email Password"
+                    />
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{email.accounts.length}</Badge>
@@ -108,8 +118,12 @@ export function EmailsBoard({ emails }: EmailsBoardProps): React.ReactElement {
                       mode="edit"
                       email={email}
                       trigger={
-                        <Button variant="ghost" size="sm">
-                          Edit
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="cursor-pointer"
+                        >
+                          <Pencil className="h-4 w-4" />
                         </Button>
                       }
                     />

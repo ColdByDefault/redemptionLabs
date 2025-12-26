@@ -28,7 +28,6 @@ import {
 import type {
   Email,
   EmailCategory,
-  EmailAlias,
   AccountTier,
   BillingCycle,
 } from "@/types/account";
@@ -40,7 +39,6 @@ interface EmailDialogProps {
 }
 
 const EMAIL_CATEGORIES: EmailCategory[] = ["primary", "secondary", "temp"];
-const EMAIL_ALIASES: EmailAlias[] = ["main", "secondary"];
 const ACCOUNT_TIERS: AccountTier[] = ["free", "paid"];
 const BILLING_CYCLES: BillingCycle[] = [
   "monthly",
@@ -89,13 +87,14 @@ export function EmailDialog({
       if (mode === "create") {
         const result = await createEmail({
           email: formData.email,
-          alias: formData.alias ? (formData.alias as EmailAlias) : null,
+          alias: formData.alias.trim() || null,
           category: formData.category as EmailCategory,
           tier: formData.tier as AccountTier,
           price: formData.price ? parseFloat(formData.price) : null,
-          billingCycle: formData.billingCycle
-            ? (formData.billingCycle as BillingCycle)
-            : null,
+          billingCycle:
+            formData.billingCycle && formData.billingCycle !== "none"
+              ? (formData.billingCycle as BillingCycle)
+              : null,
           password: formData.password,
           notes: formData.notes || null,
         });
@@ -111,13 +110,14 @@ export function EmailDialog({
         const result = await updateEmail({
           id: email.id,
           email: formData.email,
-          alias: formData.alias ? (formData.alias as EmailAlias) : null,
+          alias: formData.alias.trim() || null,
           category: formData.category as EmailCategory,
           tier: formData.tier as AccountTier,
           price: formData.price ? parseFloat(formData.price) : null,
-          billingCycle: formData.billingCycle
-            ? (formData.billingCycle as BillingCycle)
-            : null,
+          billingCycle:
+            formData.billingCycle && formData.billingCycle !== "none"
+              ? (formData.billingCycle as BillingCycle)
+              : null,
           password: formData.password,
           notes: formData.notes || null,
         });
@@ -177,27 +177,15 @@ export function EmailDialog({
 
           <div className="space-y-2">
             <Label htmlFor="alias">Alias (Quick Reference)</Label>
-            <Select
+            <Input
+              id="alias"
+              type="text"
               value={formData.alias}
-              onValueChange={(value) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  alias: value === "none" ? "" : value,
-                }))
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, alias: e.target.value }))
               }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select alias (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {EMAIL_ALIASES.map((alias) => (
-                  <SelectItem key={alias} value={alias}>
-                    {alias.charAt(0).toUpperCase() + alias.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="e.g., Main, Work, Personal"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -322,6 +310,7 @@ export function EmailDialog({
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={loading}
+                className="cursor-pointer"
               >
                 Delete
               </Button>
@@ -332,10 +321,15 @@ export function EmailDialog({
                 variant="outline"
                 onClick={() => setOpen(false)}
                 disabled={loading}
+                className="cursor-pointer"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="cursor-pointer"
+              >
                 {loading ? "Saving..." : mode === "create" ? "Create" : "Save"}
               </Button>
             </div>

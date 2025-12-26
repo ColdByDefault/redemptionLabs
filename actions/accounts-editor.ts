@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type {
   EmailCategory,
-  EmailAlias,
   AccountTier,
   BillingCycle,
   AuthMethod,
@@ -16,7 +15,7 @@ import type {
 
 export interface CreateEmailInput {
   email: string;
-  alias?: EmailAlias | null;
+  alias?: string | null;
   category: EmailCategory;
   tier: AccountTier;
   price?: number | null;
@@ -28,7 +27,7 @@ export interface CreateEmailInput {
 export interface UpdateEmailInput {
   id: string;
   email?: string;
-  alias?: EmailAlias | null;
+  alias?: string | null;
   category?: EmailCategory;
   tier?: AccountTier;
   price?: number | null;

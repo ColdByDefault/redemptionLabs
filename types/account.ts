@@ -15,12 +15,10 @@ export type AuthMethod =
   | "authenticator"
   | "other";
 
-export type EmailAlias = "main" | "secondary";
-
 export interface Email {
   id: string;
   email: string;
-  alias: EmailAlias | null;
+  alias: string | null;
   category: EmailCategory;
   tier: AccountTier;
   price: number | null;

@@ -3,7 +3,6 @@ import type {
   AccountTier,
   BillingCycle,
   AuthMethod,
-  EmailAlias,
 } from "@/types/account";
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
@@ -21,8 +20,8 @@ export function getEmailCategoryColor(category: EmailCategory): string {
 // Account tier color classes
 export function getAccountTierColor(tier: AccountTier): string {
   const colors: Record<AccountTier, string> = {
-    free: "bg-orange-500 text-white border-orange-500",
-    paid: "bg-sky-400 text-white border-sky-400",
+    free: "bg-emerald-500 text-white border-emerald-500",
+    paid: "bg-red-500 text-white border-red-500",
   };
   return colors[tier];
 }
@@ -82,7 +81,7 @@ export function formatAuthMethod(method: AuthMethod): string {
 // Format price for display
 export function formatPrice(price: number | null | undefined): string {
   if (price == null) return "-";
-  return `$${price.toFixed(2)}`;
+  return `€${price.toFixed(2)}`;
 }
 
 // Format date for display
@@ -103,23 +102,4 @@ export function formatEmailCategory(category: EmailCategory): string {
     temp: "Temporary",
   };
   return labels[category];
-}
-
-// Email alias color classes
-export function getEmailAliasColor(alias: EmailAlias): string {
-  const colors: Record<EmailAlias, string> = {
-    main: "bg-purple-500 text-white border-purple-500",
-    secondary: "bg-indigo-500 text-white border-indigo-500",
-  };
-  return colors[alias];
-}
-
-// Format email alias for display
-export function formatEmailAlias(alias: EmailAlias | null): string {
-  if (!alias) return "";
-  const labels: Record<EmailAlias, string> = {
-    main: "Main",
-    secondary: "Secondary",
-  };
-  return labels[alias];
 }

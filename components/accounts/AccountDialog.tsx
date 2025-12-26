@@ -116,9 +116,10 @@ export function AccountDialog({
           tier: formData.tier as AccountTier,
           price: formData.price ? parseFloat(formData.price) : null,
           dueDate: formData.dueDate ? new Date(formData.dueDate) : null,
-          billingCycle: formData.billingCycle
-            ? (formData.billingCycle as BillingCycle)
-            : null,
+          billingCycle:
+            formData.billingCycle && formData.billingCycle !== "none"
+              ? (formData.billingCycle as BillingCycle)
+              : null,
           authMethod: formData.authMethod as AuthMethod,
           username: formData.username || null,
           password: formData.password || null,
@@ -140,9 +141,10 @@ export function AccountDialog({
           tier: formData.tier as AccountTier,
           price: formData.price ? parseFloat(formData.price) : null,
           dueDate: formData.dueDate ? new Date(formData.dueDate) : null,
-          billingCycle: formData.billingCycle
-            ? (formData.billingCycle as BillingCycle)
-            : null,
+          billingCycle:
+            formData.billingCycle && formData.billingCycle !== "none"
+              ? (formData.billingCycle as BillingCycle)
+              : null,
           authMethod: formData.authMethod as AuthMethod,
           username: formData.username || null,
           password: formData.password || null,
@@ -218,10 +220,7 @@ export function AccountDialog({
                 {emails.map((email) => (
                   <SelectItem key={email.id} value={email.id}>
                     {email.alias
-                      ? `${
-                          email.alias.charAt(0).toUpperCase() +
-                          email.alias.slice(1)
-                        } - ${email.email}`
+                      ? `${email.alias} - ${email.email}`
                       : email.email}
                   </SelectItem>
                 ))}
@@ -377,6 +376,7 @@ export function AccountDialog({
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={loading}
+                className="cursor-pointer"
               >
                 Delete
               </Button>
@@ -387,10 +387,15 @@ export function AccountDialog({
                 variant="outline"
                 onClick={() => setOpen(false)}
                 disabled={loading}
+                className="cursor-pointer"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="cursor-pointer"
+              >
                 {loading ? "Saving..." : mode === "create" ? "Create" : "Save"}
               </Button>
             </div>
