@@ -62,7 +62,7 @@ async function main(): Promise<void> {
       tier: "paid",
       price: 17.5,
       billingCycle: "monthly",
-      authMethod: "none",
+      authMethods: ["none"],
       emailId: mainEmail.id,
     },
   });
@@ -71,7 +71,7 @@ async function main(): Promise<void> {
     data: {
       provider: "GitHub",
       tier: "free",
-      authMethod: "none",
+      authMethods: ["none"],
       emailId: mainEmail.id,
     },
   });
@@ -82,7 +82,7 @@ async function main(): Promise<void> {
       tier: "paid",
       price: 35,
       billingCycle: "monthly",
-      authMethod: "none",
+      authMethods: ["none"],
       emailId: mainEmail.id,
     },
   });

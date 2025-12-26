@@ -107,7 +107,7 @@ export async function createEmail(input: CreateEmailInput): Promise<{
 
     await updateSectionTimestamp("emails");
     revalidatePath("/accounts");
-    return { success: true, expenseAdded };
+    return expenseAdded ? { success: true, expenseAdded } : { success: true };
   } catch (error) {
     console.error("Failed to create email:", error);
     return { success: false, error: "Failed to create email" };
@@ -294,7 +294,7 @@ export async function createAccount(input: CreateAccountInput): Promise<{
 
     await updateSectionTimestamp("accounts");
     revalidatePath("/accounts");
-    return { success: true, expenseAdded };
+    return expenseAdded ? { success: true, expenseAdded } : { success: true };
   } catch (error) {
     console.error("Failed to create account:", error);
     return { success: false, error: "Failed to create account" };
