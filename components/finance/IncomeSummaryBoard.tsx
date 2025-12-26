@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   getPaymentCycleColor,
   formatCurrency,
@@ -82,6 +83,8 @@ export function IncomeSummaryBoard({
         </div>
       </div>
 
+      <Separator />
+
       {/* Income Table */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -95,7 +98,10 @@ export function IncomeSummaryBoard({
             entityType="income"
             mode="create"
             trigger={
-              <Button size="sm" className="cursor-pointer">
+              <Button
+                size="sm"
+                className="cursor-pointer bg-green-600 hover:bg-green-700"
+              >
                 Add Income
               </Button>
             }
@@ -167,6 +173,8 @@ export function IncomeSummaryBoard({
         </div>
       </div>
 
+      <Separator />
+
       {/* Debts Table - added Payment Month column */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -180,7 +188,10 @@ export function IncomeSummaryBoard({
             entityType="debt"
             mode="create"
             trigger={
-              <Button size="sm" className="cursor-pointer">
+              <Button
+                size="sm"
+                className="cursor-pointer bg-green-600 hover:bg-green-700"
+              >
                 Add Debt
               </Button>
             }
@@ -258,6 +269,8 @@ export function IncomeSummaryBoard({
         </div>
       </div>
 
+      <Separator />
+
       {/* Credits Table - Total + Used + Available */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -271,7 +284,10 @@ export function IncomeSummaryBoard({
             entityType="credit"
             mode="create"
             trigger={
-              <Button size="sm" className="cursor-pointer">
+              <Button
+                size="sm"
+                className="cursor-pointer bg-green-600 hover:bg-green-700"
+              >
                 Add Credit
               </Button>
             }

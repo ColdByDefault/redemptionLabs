@@ -5,6 +5,7 @@ import {
   OneTimeBillsBoard,
   BanksBoard,
 } from "@/components/finance";
+import { SectionCard } from "@/components/ui/section-card";
 import { SectionHeader } from "@/components/ui/section-header";
 
 export default async function FinancePage(): Promise<React.ReactElement> {
@@ -16,7 +17,7 @@ export default async function FinancePage(): Promise<React.ReactElement> {
     financeData;
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Finance</h1>
         <p className="text-muted-foreground">
@@ -25,15 +26,13 @@ export default async function FinancePage(): Promise<React.ReactElement> {
       </div>
 
       {/* Part 4: Banks */}
-      <section className="space-y-4">
+      <SectionCard>
         <SectionHeader title="Bank Accounts" updatedAt={timestamps.banks} />
         <BanksBoard banks={banks} />
-      </section>
-
-      <hr className="border-border" />
+      </SectionCard>
 
       {/* Part 1: Income, Debts & Credits Summary */}
-      <section className="space-y-4">
+      <SectionCard>
         <SectionHeader
           title="Income & Debts Overview"
           updatedAt={timestamps.income_overview}
@@ -45,12 +44,10 @@ export default async function FinancePage(): Promise<React.ReactElement> {
           recurringExpenses={recurringExpenses}
           oneTimeBills={oneTimeBills}
         />
-      </section>
-
-      <hr className="border-border" />
+      </SectionCard>
 
       {/* Part 2: Recurring Monthly Expenses */}
-      <section className="space-y-4">
+      <SectionCard>
         <SectionHeader
           title="Recurring Expenses"
           updatedAt={timestamps.recurring_expenses}
@@ -61,18 +58,16 @@ export default async function FinancePage(): Promise<React.ReactElement> {
           debts={debts}
           banks={banks}
         />
-      </section>
-
-      <hr className="border-border" />
+      </SectionCard>
 
       {/* Part 3: One-Time Bills */}
-      <section className="space-y-4">
+      <SectionCard>
         <SectionHeader
           title="One-Time Bills"
           updatedAt={timestamps.one_time_bills}
         />
         <OneTimeBillsBoard bills={oneTimeBills} banks={banks} />
-      </section>
+      </SectionCard>
     </div>
   );
 }

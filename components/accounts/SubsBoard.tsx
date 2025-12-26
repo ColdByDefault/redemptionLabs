@@ -59,7 +59,10 @@ export function SubsBoard({
           emails={emails}
           banks={banks}
           trigger={
-            <Button size="sm" className="cursor-pointer">
+            <Button
+              size="sm"
+              className="cursor-pointer bg-green-600 hover:bg-green-700"
+            >
               Add Account
             </Button>
           }

@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import type { Bank } from "@/types/finance";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   formatCurrency,
   formatBankName,
@@ -33,6 +34,8 @@ export function BanksBoard({ banks }: BanksBoardProps): React.ReactElement {
         </p>
       </div>
 
+      <Separator />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -45,7 +48,10 @@ export function BanksBoard({ banks }: BanksBoardProps): React.ReactElement {
           entityType="bank"
           mode="create"
           trigger={
-            <Button size="sm" className="cursor-pointer">
+            <Button
+              size="sm"
+              className="cursor-pointer bg-green-600 hover:bg-green-700"
+            >
               Add Bank
             </Button>
           }

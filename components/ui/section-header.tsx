@@ -12,7 +12,7 @@ export function SectionHeader({
   updatedAt,
 }: SectionHeaderProps): React.ReactElement {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col items-center gap-1">
       <h2 className="text-xl font-semibold">{title}</h2>
       {updatedAt && (
         <span className="text-sm text-muted-foreground">

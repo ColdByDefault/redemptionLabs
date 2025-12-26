@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   getRecurringCycleColor,
   getTrialTypeColor,
@@ -96,6 +97,8 @@ export function RecurringExpensesBoard({
         </div>
       </div>
 
+      <Separator />
+
       {/* Table */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -111,7 +114,10 @@ export function RecurringExpensesBoard({
           debts={debts}
           banks={banks}
           trigger={
-            <Button size="sm" className="cursor-pointer">
+            <Button
+              size="sm"
+              className="cursor-pointer bg-green-600 hover:bg-green-700"
+            >
               Add Expense
             </Button>
           }

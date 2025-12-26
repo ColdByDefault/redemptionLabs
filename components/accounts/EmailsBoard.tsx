@@ -52,7 +52,10 @@ export function EmailsBoard({
           entityType="email"
           mode="create"
           trigger={
-            <Button size="sm" className="cursor-pointer">
+            <Button
+              size="sm"
+              className="cursor-pointer bg-green-600 hover:bg-green-700"
+            >
               Add Email
             </Button>
           }
