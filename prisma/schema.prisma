@@ -80,3 +80,132 @@ model Account {
 
   @@map("accounts")
 }
+
+// ============================================================
+// FINANCE ENUMS
+// ============================================================
+
+enum PaymentCycle {
+  monthly
+  yearly
+  weekly
+  onetime
+}
+
+enum TrialType {
+  none
+  week
+  month
+  custom
+}
+
+enum RecurringCycle {
+  monthly
+  yearly
+  weekly
+}
+
+enum ExpenseCategory {
+  subscription
+  debt
+}
+
+enum BankName {
+  volksbank
+  sparkasse
+  volksbank_visa
+  paypal
+}
+
+// ============================================================
+// FINANCE MODELS
+// ============================================================
+
+model Income {
+  id              String       @id @default(cuid())
+  source          String
+  amount          Float
+  cycle           PaymentCycle
+  nextPaymentDate DateTime?
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("incomes")
+}
+
+model Debt {
+  id              String       @id @default(cuid())
+  name            String
+  amount          Float
+  remainingAmount Float
+  payTo           String
+  cycle           PaymentCycle
+  paymentMonth    String?      // e.g., "January 2025" - which month this payment is for
+  dueDate         DateTime?
+  monthsRemaining Int?
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("debts")
+}
+
+model Credit {
+  id           String   @id @default(cuid())
+  provider     String
+  totalLimit   Float    // Total credit limit available
+  usedAmount   Float    @default(0) // Amount currently used
+  interestRate Float
+  dueDate      DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("credits")
+}
+
+model RecurringExpense {
+  id           String          @id @default(cuid())
+  name         String
+  amount       Float
+  dueDate      DateTime?
+  cycle        RecurringCycle
+  trialType    TrialType       @default(none)
+  trialEndDate DateTime?
+  category     ExpenseCategory
+  linkedCreditId String?       // Optional link to a credit being paid back
+  linkedDebtId   String?       // Optional link to a debt being paid back
+  notes        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@map("recurring_expenses")
+}
+
+model OneTimeBill {
+  id        String   @id @default(cuid())
+  name      String
+  amount    Float
+  payTo     String
+  dueDate   DateTime?
+  isPaid    Boolean  @default(false)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("one_time_bills")
+}
+
+model Bank {
+  id                String   @id @default(cuid())
+  name              BankName @unique
+  displayName       String
+  balance           Float    @default(0)
+  lastBalanceUpdate DateTime @default(now()) // When balance was last updated
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("banks")
+}
