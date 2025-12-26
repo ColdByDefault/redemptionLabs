@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { buildDashboardData } from "@/lib/finance";
 import type {
   Income,
   Debt,
@@ -10,6 +11,7 @@ import type {
   Bank,
   SectionName,
   SectionTimestamp,
+  DashboardData,
 } from "@/types/finance";
 
 // ============================================================
@@ -134,4 +136,22 @@ export async function updateSectionTimestamp(
     update: { updatedAt: new Date() },
     create: { section, updatedAt: new Date() },
   });
+}
+
+// ============================================================
+// DASHBOARD ACTION
+// ============================================================
+
+export async function getDashboardData(): Promise<DashboardData> {
+  const { incomes, debts, credits, recurringExpenses, oneTimeBills, banks } =
+    await getAllFinanceData();
+
+  return buildDashboardData(
+    incomes,
+    debts,
+    credits,
+    recurringExpenses,
+    oneTimeBills,
+    banks
+  );
 }

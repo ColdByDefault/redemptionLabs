@@ -128,6 +128,32 @@ export interface FinanceSummary {
 }
 
 // ============================================================
+// DASHBOARD TYPES
+// ============================================================
+
+export interface UpcomingBill {
+  id: string;
+  name: string;
+  amount: number;
+  dueDate: Date;
+  type: "recurring" | "onetime";
+  daysUntilDue: number;
+}
+
+export interface BankBalanceSummary {
+  name: BankName;
+  displayName: string;
+  balance: number;
+}
+
+export interface DashboardData {
+  summary: FinanceSummary;
+  upcomingBills: UpcomingBill[];
+  bankBalances: BankBalanceSummary[];
+  monthlyNetIncome: number;
+}
+
+// ============================================================
 // SECTION TIMESTAMP TYPES
 // ============================================================
 

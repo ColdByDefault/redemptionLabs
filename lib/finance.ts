@@ -11,6 +11,9 @@ import type {
   OneTimeBill,
   Bank,
   FinanceSummary,
+  UpcomingBill,
+  BankBalanceSummary,
+  DashboardData,
 } from "@/types/finance";
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
@@ -329,4 +332,148 @@ export function formatRelativeTime(date: Date | null | undefined): string {
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return `${diffDays}d ago`;
   return formatFinanceDate(date);
+}
+
+// ============================================================
+// DASHBOARD HELPERS
+// ============================================================
+
+/**
+ * Get upcoming bills within the specified number of days
+ */
+export function getUpcomingBills(
+  recurringExpenses: RecurringExpense[],
+  oneTimeBills: OneTimeBill[],
+  withinDays: number = 7
+): UpcomingBill[] {
+  const now = new Date();
+  const upcoming: UpcomingBill[] = [];
+
+  // Add recurring expenses with due dates within range
+  for (const expense of recurringExpenses) {
+    if (!expense.dueDate) continue;
+    const due = new Date(expense.dueDate);
+    const diffMs = due.getTime() - now.getTime();
+    const daysUntilDue = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (daysUntilDue >= 0 && daysUntilDue <= withinDays) {
+      upcoming.push({
+        id: expense.id,
+        name: expense.name,
+        amount: expense.amount,
+        dueDate: due,
+        type: "recurring",
+        daysUntilDue,
+      });
+    }
+  }
+
+  // Add unpaid one-time bills with due dates within range
+  for (const bill of oneTimeBills) {
+    if (!bill.dueDate || bill.isPaid) continue;
+    const due = new Date(bill.dueDate);
+    const diffMs = due.getTime() - now.getTime();
+    const daysUntilDue = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (daysUntilDue >= 0 && daysUntilDue <= withinDays) {
+      upcoming.push({
+        id: bill.id,
+        name: bill.name,
+        amount: bill.amount,
+        dueDate: due,
+        type: "onetime",
+        daysUntilDue,
+      });
+    }
+  }
+
+  // Sort by days until due (soonest first)
+  return upcoming.sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+}
+
+/**
+ * Get bank balance summaries
+ */
+export function getBankBalanceSummaries(banks: Bank[]): BankBalanceSummary[] {
+  return banks.map((bank) => ({
+    name: bank.name,
+    displayName: bank.displayName,
+    balance: bank.balance,
+  }));
+}
+
+/**
+ * Calculate monthly net income (income - expenses)
+ */
+export function calculateMonthlyNetIncome(
+  incomes: Income[],
+  recurringExpenses: RecurringExpense[]
+): number {
+  // Only count monthly income
+  const monthlyIncome = incomes
+    .filter((i) => i.cycle === "monthly")
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  // Convert yearly income to monthly
+  const yearlyToMonthly = incomes
+    .filter((i) => i.cycle === "yearly")
+    .reduce((sum, i) => sum + i.amount / 12, 0);
+
+  // Convert weekly income to monthly (approx 4.33 weeks/month)
+  const weeklyToMonthly = incomes
+    .filter((i) => i.cycle === "weekly")
+    .reduce((sum, i) => sum + i.amount * 4.33, 0);
+
+  const totalMonthlyIncome = monthlyIncome + yearlyToMonthly + weeklyToMonthly;
+
+  // Calculate monthly expenses
+  const monthlyExpenses = recurringExpenses
+    .filter((e) => e.cycle === "monthly")
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const yearlyExpensesToMonthly = recurringExpenses
+    .filter((e) => e.cycle === "yearly")
+    .reduce((sum, e) => sum + e.amount / 12, 0);
+
+  const weeklyExpensesToMonthly = recurringExpenses
+    .filter((e) => e.cycle === "weekly")
+    .reduce((sum, e) => sum + e.amount * 4.33, 0);
+
+  const totalMonthlyExpenses =
+    monthlyExpenses + yearlyExpensesToMonthly + weeklyExpensesToMonthly;
+
+  return totalMonthlyIncome - totalMonthlyExpenses;
+}
+
+/**
+ * Build complete dashboard data
+ */
+export function buildDashboardData(
+  incomes: Income[],
+  debts: Debt[],
+  credits: Credit[],
+  recurringExpenses: RecurringExpense[],
+  oneTimeBills: OneTimeBill[],
+  banks: Bank[]
+): DashboardData {
+  const summary = calculateFinanceSummary(
+    incomes,
+    debts,
+    credits,
+    recurringExpenses,
+    banks
+  );
+  const upcomingBills = getUpcomingBills(recurringExpenses, oneTimeBills, 7);
+  const bankBalances = getBankBalanceSummaries(banks);
+  const monthlyNetIncome = calculateMonthlyNetIncome(
+    incomes,
+    recurringExpenses
+  );
+
+  return {
+    summary,
+    upcomingBills,
+    bankBalances,
+    monthlyNetIncome,
+  };
 }
