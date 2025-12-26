@@ -15,6 +15,7 @@ import type {
   BankName,
   SectionName,
 } from "@/types/finance";
+import type { AuditAction, AuditEntity } from "@/types/audit";
 
 // ============================================================
 // EMAIL & ACCOUNT CONSTANTS
@@ -177,3 +178,46 @@ export const DEFAULT_LOCALE = "de-DE";
 
 export const PAGINATION_DEFAULT_PAGE_SIZE = 10;
 export const PAGINATION_PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
+
+// ============================================================
+// AUDIT CONSTANTS
+// ============================================================
+
+export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
+  create: "Created",
+  update: "Updated",
+  delete: "Deleted",
+  restore: "Restored",
+} as const;
+
+export const AUDIT_ENTITY_LABELS: Record<AuditEntity, string> = {
+  email: "Email",
+  account: "Account",
+  income: "Income",
+  debt: "Debt",
+  credit: "Credit",
+  recurring_expense: "Recurring Expense",
+  one_time_bill: "One-Time Bill",
+  bank: "Bank",
+} as const;
+
+export type AuditBadgeVariant =
+  | "default"
+  | "secondary"
+  | "destructive"
+  | "outline";
+
+export const AUDIT_ACTION_VARIANTS: Record<AuditAction, AuditBadgeVariant> = {
+  create: "default",
+  update: "secondary",
+  delete: "destructive",
+  restore: "outline",
+} as const;
+
+export const AUDIT_ACTION_OPTIONS = Object.entries(AUDIT_ACTION_LABELS).map(
+  ([value, label]) => ({ value, label })
+);
+
+export const AUDIT_ENTITY_OPTIONS = Object.entries(AUDIT_ENTITY_LABELS).map(
+  ([value, label]) => ({ value, label })
+);

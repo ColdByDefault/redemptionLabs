@@ -28,6 +28,7 @@ export interface Income {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 // ============================================================
@@ -47,6 +48,7 @@ export interface Debt {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 export interface Credit {
@@ -59,6 +61,7 @@ export interface Credit {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 // ============================================================
@@ -80,6 +83,7 @@ export interface RecurringExpense {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 // ============================================================
@@ -97,6 +101,7 @@ export interface OneTimeBill {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 // ============================================================
@@ -112,6 +117,7 @@ export interface Bank {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 // ============================================================

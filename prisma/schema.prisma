@@ -57,6 +57,7 @@ model Email {
   notes        String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
   accounts     Account[]
 
   @@map("emails")
@@ -78,6 +79,7 @@ model Account {
   linkedBankId String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
 
   @@map("accounts")
 }
@@ -131,6 +133,7 @@ model Income {
   notes           String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
 
   @@map("incomes")
 }
@@ -148,6 +151,7 @@ model Debt {
   notes           String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
 
   @@map("debts")
 }
@@ -162,6 +166,7 @@ model Credit {
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
 
   @@map("credits")
 }
@@ -181,6 +186,7 @@ model RecurringExpense {
   notes        String?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
 
   @@map("recurring_expenses")
 }
@@ -196,6 +202,7 @@ model OneTimeBill {
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
 
   @@map("one_time_bills")
 }
@@ -209,6 +216,7 @@ model Bank {
   notes             String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
 
   @@map("banks")
 }
@@ -232,4 +240,41 @@ model SectionTimestamp {
   updatedAt DateTime    @default(now())
 
   @@map("section_timestamps")
+}
+
+// ============================================================
+// AUDIT LOG
+// ============================================================
+
+enum AuditAction {
+  create
+  update
+  delete
+  restore
+}
+
+enum AuditEntity {
+  email
+  account
+  income
+  debt
+  credit
+  recurring_expense
+  one_time_bill
+  bank
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  action     AuditAction
+  entity     AuditEntity
+  entityId   String
+  entityName String?     // Human-readable identifier (e.g., email address, account name)
+  changes    Json?       // Stores { field: { old: value, new: value } }
+  metadata   Json?       // Additional context (e.g., IP address, user agent)
+  createdAt  DateTime    @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

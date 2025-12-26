@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { buildDashboardData } from "@/lib/finance";
+import { notDeleted } from "@/lib/audit";
 import type {
   Income,
   Debt,
@@ -15,11 +16,12 @@ import type {
 } from "@/types/finance";
 
 // ============================================================
-// FETCH ACTIONS
+// FETCH ACTIONS (excludes soft-deleted records)
 // ============================================================
 
 export async function getIncomes(): Promise<Income[]> {
   const incomes = await prisma.income.findMany({
+    where: notDeleted,
     orderBy: { createdAt: "desc" },
   });
   return incomes;
@@ -27,6 +29,7 @@ export async function getIncomes(): Promise<Income[]> {
 
 export async function getDebts(): Promise<Debt[]> {
   const debts = await prisma.debt.findMany({
+    where: notDeleted,
     orderBy: { createdAt: "desc" },
   });
   return debts;
@@ -34,6 +37,7 @@ export async function getDebts(): Promise<Debt[]> {
 
 export async function getCredits(): Promise<Credit[]> {
   const credits = await prisma.credit.findMany({
+    where: notDeleted,
     orderBy: { createdAt: "desc" },
   });
   return credits;
@@ -41,6 +45,7 @@ export async function getCredits(): Promise<Credit[]> {
 
 export async function getRecurringExpenses(): Promise<RecurringExpense[]> {
   const expenses = await prisma.recurringExpense.findMany({
+    where: notDeleted,
     orderBy: { createdAt: "desc" },
   });
   return expenses;
@@ -48,6 +53,7 @@ export async function getRecurringExpenses(): Promise<RecurringExpense[]> {
 
 export async function getOneTimeBills(): Promise<OneTimeBill[]> {
   const bills = await prisma.oneTimeBill.findMany({
+    where: notDeleted,
     orderBy: { dueDate: "asc" },
   });
   return bills;
@@ -55,6 +61,7 @@ export async function getOneTimeBills(): Promise<OneTimeBill[]> {
 
 export async function getBanks(): Promise<Bank[]> {
   const banks = await prisma.bank.findMany({
+    where: notDeleted,
     orderBy: { name: "asc" },
   });
   return banks;

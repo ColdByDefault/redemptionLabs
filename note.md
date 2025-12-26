@@ -11,9 +11,6 @@
 2. **Password Encryption**  
    Passwords are stored as plain strings. Encrypt them with `bcrypt` or use a secrets vault pattern.
 
-3. **Soft Deletes + Audit Trail**  
-   Add `deletedAt` fields to models and an `AuditLog` model to track who changed what and when. Critical for finance apps.
-
 4. **Search & Filtering**  
    Add global search across accounts/expenses with debounced input. Could use `nuqs` for URL-based state.
 
@@ -23,7 +20,14 @@
 6. **Recurring Bill Automation**  
    Create a `/api/cron` route that:
    - Marks passed due dates as overdue
-   - Sends notifications (email or in-app)
+   - Sends notifications (in-app)
+       - bell icon with badge for notifications in navbar
+           - notification model:
+               - id
+               - type (bill_due, bill_overdue, low_balance, etc)
+               - message
+               - isRead
+               - createdAt
    - Auto-creates next month's entries for recurring items
 
 7. **Charts & Visualization**  

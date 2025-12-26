@@ -27,6 +27,7 @@ export interface Email {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 export interface Account {
@@ -44,6 +45,7 @@ export interface Account {
   linkedBankId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 // Extended types with relations
