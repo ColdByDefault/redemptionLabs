@@ -15,9 +15,6 @@ export default async function AccountsPage(): Promise<React.ReactElement> {
     <div className="container mx-auto py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Accounts</h1>
-        <p className="text-muted-foreground">
-          Manage your emails and linked accounts
-        </p>
       </div>
 
       <SectionCard>

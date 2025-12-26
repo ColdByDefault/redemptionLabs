@@ -20,9 +20,6 @@ export default async function FinancePage(): Promise<React.ReactElement> {
     <div className="container mx-auto py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Finance</h1>
-        <p className="text-muted-foreground">
-          Manage your income, expenses, debts, and bank accounts
-        </p>
       </div>
 
       {/* Part 4: Banks */}
