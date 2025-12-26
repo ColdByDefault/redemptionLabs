@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, X, Upload, Link as LinkIcon } from "lucide-react";
+import { Plus, X, Upload, Link as LinkIcon, Check } from "lucide-react";
 import { queuedToast } from "@/store";
 import {
   Dialog,
@@ -21,6 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { createWishlistItem, updateWishlistItem } from "@/actions/wishlist";
 import { softDeleteWishlistItem } from "@/actions/trash";
 import type { WishlistItem, NeedRate } from "@/types/wishlist";
@@ -33,6 +39,14 @@ interface WishlistDialogProps {
   item?: WishlistItem;
   trigger: React.ReactNode;
   mode: "create" | "edit";
+}
+
+interface FormErrors {
+  name?: string;
+  price?: string;
+  whereToBuy?: string;
+  newLink?: string;
+  image?: string;
 }
 
 // ============================================================
@@ -72,6 +86,16 @@ export function WishlistDialog({
   const [imageUrl, setImageUrl] = useState("");
   const [imageMode, setImageMode] = useState<"url" | "upload">("url");
 
+  // Error state
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  // Clear specific error when field changes
+  function clearError(field: keyof FormErrors): void {
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  }
+
   // Reset form when dialog opens/closes or item changes
   useEffect(() => {
     if (open && mode === "edit" && item) {
@@ -83,8 +107,8 @@ export function WishlistDialog({
       setLinks([...item.links]);
       setNewLink("");
       setImageUrl(item.imageUrl ?? "");
-      // Detect if it's a base64 image or URL
       setImageMode(item.imageUrl?.startsWith("data:") ? "upload" : "url");
+      setErrors({});
     } else if (open && mode === "create") {
       setName("");
       setPrice("");
@@ -95,6 +119,7 @@ export function WishlistDialog({
       setNewLink("");
       setImageUrl("");
       setImageMode("url");
+      setErrors({});
     }
   }, [open, mode, item]);
 
@@ -106,8 +131,9 @@ export function WishlistDialog({
       new URL(trimmedLink);
       setLinks((prev) => [...prev, trimmedLink]);
       setNewLink("");
+      clearError("newLink");
     } catch {
-      queuedToast.error("Invalid URL");
+      setErrors((prev) => ({ ...prev, newLink: "Invalid URL format" }));
     }
   }
 
@@ -120,45 +146,65 @@ export function WishlistDialog({
     if (!file) return;
 
     if (file.size > MAX_IMAGE_SIZE) {
-      queuedToast.error("Image must be less than 10MB");
+      setErrors((prev) => ({ ...prev, image: "Image must be less than 10MB" }));
       return;
     }
 
     if (!file.type.startsWith("image/")) {
-      queuedToast.error("Please select an image file");
+      setErrors((prev) => ({ ...prev, image: "Please select an image file" }));
       return;
     }
 
+    clearError("image");
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
       setImageUrl(base64);
     };
     reader.onerror = () => {
-      queuedToast.error("Failed to read image file");
+      setErrors((prev) => ({ ...prev, image: "Failed to read image file" }));
     };
     reader.readAsDataURL(file);
   }
 
   function handleRemoveImage(): void {
     setImageUrl("");
+    clearError("image");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }
 
+  function validateForm(): boolean {
+    const newErrors: FormErrors = {};
+
+    if (!name.trim()) {
+      newErrors.name = "Item name is required";
+    }
+
+    if (!whereToBuy.trim()) {
+      newErrors.whereToBuy = "Where to buy is required";
+    }
+
+    const priceValue = parseFloat(price);
+    if (!price.trim()) {
+      newErrors.price = "Price is required";
+    } else if (isNaN(priceValue)) {
+      newErrors.price = "Price must be a valid number";
+    } else if (priceValue < 0) {
+      newErrors.price = "Price cannot be negative";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
   async function handleSubmit(): Promise<void> {
-    if (!name.trim() || !whereToBuy.trim()) {
-      queuedToast.error("Name and where to buy are required");
+    if (!validateForm()) {
       return;
     }
 
     const priceValue = parseFloat(price);
-    if (isNaN(priceValue) || priceValue < 0) {
-      queuedToast.error("Price must be a valid positive number");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -240,38 +286,77 @@ export function WishlistDialog({
         <div className="space-y-4 py-4">
           {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">Item Name *</Label>
+            <Label
+              htmlFor="name"
+              className={cn(errors.name && "text-destructive")}
+            >
+              Item Name <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                clearError("name");
+              }}
               placeholder="Enter item name"
+              aria-invalid={!!errors.name}
+              className={cn(errors.name && "border-destructive")}
             />
+            {errors.name && (
+              <p className="text-xs text-destructive">{errors.name}</p>
+            )}
           </div>
 
           {/* Price */}
           <div className="space-y-2">
-            <Label htmlFor="price">Price (€) *</Label>
+            <Label
+              htmlFor="price"
+              className={cn(errors.price && "text-destructive")}
+            >
+              Price (€) <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="price"
               type="number"
               min="0"
               step="0.01"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => {
+                setPrice(e.target.value);
+                clearError("price");
+              }}
               placeholder="0.00"
+              aria-invalid={!!errors.price}
+              className={cn(errors.price && "border-destructive")}
             />
+            {errors.price && (
+              <p className="text-xs text-destructive">{errors.price}</p>
+            )}
           </div>
 
           {/* Where to Buy */}
           <div className="space-y-2">
-            <Label htmlFor="whereToBuy">Where to Buy *</Label>
+            <Label
+              htmlFor="whereToBuy"
+              className={cn(errors.whereToBuy && "text-destructive")}
+            >
+              Where to Buy <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="whereToBuy"
               value={whereToBuy}
-              onChange={(e) => setWhereToBuy(e.target.value)}
+              onChange={(e) => {
+                setWhereToBuy(e.target.value);
+                clearError("whereToBuy");
+              }}
               placeholder="Amazon, Local Store, etc."
+              aria-invalid={!!errors.whereToBuy}
+              className={cn(errors.whereToBuy && "border-destructive")}
             />
+            {errors.whereToBuy && (
+              <p className="text-xs text-destructive">{errors.whereToBuy}</p>
+            )}
           </div>
 
           {/* Need Rate */}
@@ -308,13 +393,18 @@ export function WishlistDialog({
 
           {/* Image */}
           <div className="space-y-2">
-            <Label>Image</Label>
+            <Label className={cn(errors.image && "text-destructive")}>
+              Image
+            </Label>
             <div className="flex gap-2 mb-2">
               <Button
                 type="button"
                 variant={imageMode === "upload" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setImageMode("upload")}
+                onClick={() => {
+                  setImageMode("upload");
+                  clearError("image");
+                }}
               >
                 <Upload className="h-4 w-4 mr-1" />
                 Upload
@@ -323,7 +413,10 @@ export function WishlistDialog({
                 type="button"
                 variant={imageMode === "url" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setImageMode("url")}
+                onClick={() => {
+                  setImageMode("url");
+                  clearError("image");
+                }}
               >
                 <LinkIcon className="h-4 w-4 mr-1" />
                 URL
@@ -337,13 +430,15 @@ export function WishlistDialog({
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="block w-full text-sm text-muted-foreground
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-md file:border-0
-                    file:text-sm file:font-medium
-                    file:bg-primary file:text-primary-foreground
-                    hover:file:bg-primary/90
-                    file:cursor-pointer cursor-pointer"
+                  className={cn(
+                    "block w-full text-sm text-muted-foreground",
+                    "file:mr-4 file:py-2 file:px-4",
+                    "file:rounded-md file:border-0",
+                    "file:text-sm file:font-medium",
+                    "file:bg-primary file:text-primary-foreground",
+                    "hover:file:bg-primary/90",
+                    "file:cursor-pointer cursor-pointer"
+                  )}
                 />
                 <p className="text-xs text-muted-foreground">
                   Max size: 10MB. Supported: JPG, PNG, GIF, WebP
@@ -352,9 +447,16 @@ export function WishlistDialog({
             ) : (
               <Input
                 value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                onChange={(e) => {
+                  setImageUrl(e.target.value);
+                  clearError("image");
+                }}
                 placeholder="https://example.com/image.jpg"
               />
+            )}
+
+            {errors.image && (
+              <p className="text-xs text-destructive">{errors.image}</p>
             )}
 
             {/* Image Preview */}
@@ -384,12 +486,19 @@ export function WishlistDialog({
 
           {/* Links */}
           <div className="space-y-2">
-            <Label>Shop Links</Label>
+            <Label className={cn(errors.newLink && "text-destructive")}>
+              Shop Links
+            </Label>
             <div className="flex gap-2">
               <Input
                 value={newLink}
-                onChange={(e) => setNewLink(e.target.value)}
+                onChange={(e) => {
+                  setNewLink(e.target.value);
+                  clearError("newLink");
+                }}
                 placeholder="https://..."
+                aria-invalid={!!errors.newLink}
+                className={cn(errors.newLink && "border-destructive")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -397,15 +506,41 @@ export function WishlistDialog({
                   }
                 }}
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleAddLink}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleAddLink}
+                    disabled={!newLink.trim()}
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Add this link</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      handleAddLink();
+                      // Focus back to input for adding more
+                    }}
+                    disabled={!newLink.trim()}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Add & continue adding more</TooltipContent>
+              </Tooltip>
             </div>
+            {errors.newLink && (
+              <p className="text-xs text-destructive">{errors.newLink}</p>
+            )}
             {links.length > 0 && (
               <div className="space-y-1 mt-2">
                 {links.map((link, index) => (

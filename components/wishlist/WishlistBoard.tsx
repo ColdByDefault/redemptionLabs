@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, ShoppingCart, Pencil } from "lucide-react";
+import { Plus, ShoppingCart, Edit2 } from "lucide-react";
 import { queuedToast } from "@/store";
 import { Button } from "@/components/ui/button";
 import { WishlistCard } from "./WishlistCard";
@@ -95,9 +95,12 @@ export function WishlistBoard({
                       mode="edit"
                       item={item}
                       trigger={
-                        <Button variant="ghost" size="sm" className="h-8">
-                          <Pencil className="h-4 w-4 mr-1" />
-                          Edit
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="h-8 w-8 bg-background/95 backdrop-blur-sm"
+                        >
+                          <Edit2 className="h-4 w-4" />
                         </Button>
                       }
                     />
