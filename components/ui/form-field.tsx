@@ -17,13 +17,13 @@ interface FormFieldBaseProps {
 
 interface FormInputFieldProps
   extends FormFieldBaseProps,
-    Omit<React.ComponentProps<"input">, "className"> {
+    Omit<React.ComponentProps<"input">, "className" | "required"> {
   inputClassName?: string;
 }
 
 interface FormTextareaFieldProps
   extends FormFieldBaseProps,
-    Omit<React.ComponentProps<"textarea">, "className"> {
+    Omit<React.ComponentProps<"textarea">, "className" | "required"> {
   textareaClassName?: string;
 }
 
