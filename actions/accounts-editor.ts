@@ -133,10 +133,36 @@ export async function deleteEmail(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Get the email first to find associated expenses
+    const email = await prisma.email.findUnique({
+      where: { id },
+    });
+
+    if (!email) {
+      return { success: false, error: "Email not found" };
+    }
+
+    // Delete associated recurring expenses (auto-created from this email)
+    await prisma.recurringExpense.deleteMany({
+      where: {
+        notes: { contains: `Auto-added from email: ${email.email}` },
+      },
+    });
+
+    // Delete associated one-time bills (auto-created from this email)
+    await prisma.oneTimeBill.deleteMany({
+      where: {
+        notes: { contains: `Auto-added from email: ${email.email}` },
+      },
+    });
+
+    // Delete the email itself
     await prisma.email.delete({
       where: { id },
     });
+
     revalidatePath("/accounts");
+    revalidatePath("/finance");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete email:", error);
@@ -315,10 +341,36 @@ export async function deleteAccount(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Get the account first to find associated expenses
+    const account = await prisma.account.findUnique({
+      where: { id },
+    });
+
+    if (!account) {
+      return { success: false, error: "Account not found" };
+    }
+
+    // Delete associated recurring expenses (auto-created from this account)
+    await prisma.recurringExpense.deleteMany({
+      where: {
+        notes: { contains: `Auto-added from account: ${account.provider}` },
+      },
+    });
+
+    // Delete associated one-time bills (auto-created from this account)
+    await prisma.oneTimeBill.deleteMany({
+      where: {
+        notes: { contains: `Auto-added from account: ${account.provider}` },
+      },
+    });
+
+    // Delete the account itself
     await prisma.account.delete({
       where: { id },
     });
+
     revalidatePath("/accounts");
+    revalidatePath("/finance");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete account:", error);
