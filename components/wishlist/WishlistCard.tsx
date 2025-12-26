@@ -107,25 +107,29 @@ export function WishlistCard({
           </h3>
           <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />
-            <span>{item.whereToBuy}</span>
+            <span>{item.whereToBuy || "Location not specified"}</span>
           </div>
         </div>
 
         {/* Reason */}
-        {item.reason && (
+        {item.reason ? (
           <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-2 italic">
             &ldquo;{item.reason}&rdquo;
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground/50 bg-muted/30 rounded-lg p-2 italic">
+            No reason specified
           </p>
         )}
 
         {/* Shop Links - Show All */}
-        {item.links.length > 0 && (
-          <div className="space-y-2">
-            <Separator />
-            <div className="space-y-1.5">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Shop Links
-              </span>
+        <div className="space-y-2">
+          <Separator />
+          <div className="space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Shop Links
+            </span>
+            {item.links.length > 0 ? (
               <div className="flex flex-col gap-1">
                 <TooltipProvider>
                   {item.links.map((link, index) => (
@@ -150,9 +154,13 @@ export function WishlistCard({
                   ))}
                 </TooltipProvider>
               </div>
-            </div>
+            ) : (
+              <p className="text-sm text-muted-foreground/50 italic py-1">
+                No links added
+              </p>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

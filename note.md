@@ -1,5 +1,5 @@
 - check timestamps updates after db reset
-
+- one btn to delete all notifications
 
 ---
 
