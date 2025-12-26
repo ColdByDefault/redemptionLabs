@@ -6,6 +6,12 @@ import { Trash2, HardDrive } from "lucide-react";
 import { navLinks } from "@/data/navbar";
 import { ModeToggle } from "@/components/theme";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/types/notification";
 import { NotificationBell } from "@/components/notifications";
@@ -54,27 +60,45 @@ export function Navbar({
             notifications={notifications}
             unreadCount={unreadCount}
           />
-          <BackupDialog
-            trigger={
-              <Button variant="ghost" size="icon">
-                <HardDrive className="h-[1.2rem] w-[1.2rem] text-zinc-500 dark:text-zinc-400" />
-                <span className="sr-only">Backup & Restore</span>
-              </Button>
-            }
-          />
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/trash">
-              <Trash2
-                className={cn(
-                  "h-[1.2rem] w-[1.2rem]",
-                  pathname === "/trash"
-                    ? "text-zinc-900 dark:text-zinc-100"
-                    : "text-zinc-500 dark:text-zinc-400"
-                )}
+          <TooltipProvider>
+            <Tooltip>
+              <BackupDialog
+                trigger={
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <HardDrive className="h-[1.2rem] w-[1.2rem] text-zinc-500 dark:text-zinc-400" />
+                      <span className="sr-only">Backup & Restore</span>
+                    </Button>
+                  </TooltipTrigger>
+                }
               />
-              <span className="sr-only">Trash</span>
-            </Link>
-          </Button>
+              <TooltipContent>
+                <p>Backup & Restore</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href="/trash">
+                    <Trash2
+                      className={cn(
+                        "h-[1.2rem] w-[1.2rem]",
+                        pathname === "/trash"
+                          ? "text-zinc-900 dark:text-zinc-100"
+                          : "text-zinc-500 dark:text-zinc-400"
+                      )}
+                    />
+                    <span className="sr-only">Trash</span>
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Trash</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <ModeToggle />
         </div>
       </div>
