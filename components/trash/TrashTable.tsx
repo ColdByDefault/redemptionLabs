@@ -14,6 +14,7 @@ import {
   restoreBank,
   restoreEmail,
   restoreAccount,
+  restoreWishlistItem,
   permanentDeleteIncome,
   permanentDeleteDebt,
   permanentDeleteCredit,
@@ -22,6 +23,7 @@ import {
   permanentDeleteBank,
   permanentDeleteEmail,
   permanentDeleteAccount,
+  permanentDeleteWishlistItem,
   emptyTrash,
 } from "@/actions/trash";
 import { Button } from "@/components/ui/button";
@@ -148,6 +150,18 @@ function normalizeDeletedItems(data: DeletedItemsData): NormalizedItem[] {
     }
   });
 
+  data.wishlistItems.forEach((item) => {
+    if (item.deletedAt) {
+      items.push({
+        id: item.id,
+        name: item.name,
+        entityType: "wishlist_item",
+        deletedAt: item.deletedAt,
+        details: `€${item.price.toFixed(2)}`,
+      });
+    }
+  });
+
   // Sort by deleted date, most recent first
   return items.sort(
     (a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime()
@@ -174,6 +188,8 @@ function getRestoreAction(
       return restoreOneTimeBill;
     case "bank":
       return restoreBank;
+    case "wishlist_item":
+      return restoreWishlistItem;
     default:
       return async () => ({ success: false, error: "Unknown entity type" });
   }
@@ -199,6 +215,8 @@ function getDeleteAction(
       return permanentDeleteOneTimeBill;
     case "bank":
       return permanentDeleteBank;
+    case "wishlist_item":
+      return permanentDeleteWishlistItem;
     default:
       return async () => ({ success: false, error: "Unknown entity type" });
   }

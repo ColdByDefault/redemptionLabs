@@ -299,6 +299,17 @@ enum AuditEntity {
   recurring_expense
   one_time_bill
   bank
+  wishlist_item
+}
+
+// ============================================================
+// WISHLIST ENUMS
+// ============================================================
+
+enum NeedRate {
+  need
+  can_wait
+  luxury
 }
 
 model AuditLog {
@@ -314,4 +325,24 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ============================================================
+// WISHLIST MODELS
+// ============================================================
+
+model WishlistItem {
+  id          String   @id @default(cuid())
+  name        String
+  price       Float
+  whereToBuy  String
+  needRate    NeedRate
+  reason      String?
+  links       String[] @default([])
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@map("wishlist_items")
 }

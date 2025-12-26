@@ -199,6 +199,7 @@ export const AUDIT_ENTITY_LABELS: Record<AuditEntity, string> = {
   recurring_expense: "Recurring Expense",
   one_time_bill: "One-Time Bill",
   bank: "Bank",
+  wishlist_item: "Wishlist Item",
 } as const;
 
 export type AuditBadgeVariant =

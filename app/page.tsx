@@ -35,16 +35,21 @@ export default async function Home(): Promise<React.ReactElement> {
         </div>
 
         {/* Quick Links */}
-        <div className="mt-8 flex gap-4">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="mt-8 flex gap-4 flex-col rounded-xl justify-center items-center">
+          <h3>
+            <span className="text-2xl font-bold">Quick Links</span>
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>

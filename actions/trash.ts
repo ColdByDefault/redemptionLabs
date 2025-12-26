@@ -12,6 +12,7 @@ import type {
   Bank,
 } from "@/types/finance";
 import type { Email, Account } from "@/types/account";
+import type { WishlistItem } from "@/types/wishlist";
 
 // ============================================================
 // SOFT DELETE ACTIONS
@@ -227,6 +228,28 @@ export async function softDeleteAccount(
   } catch (error) {
     console.error("Failed to soft delete account:", error);
     return { success: false, error: "Failed to delete account" };
+  }
+}
+
+export async function softDeleteWishlistItem(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const item = await prisma.wishlistItem.findUnique({ where: { id } });
+    if (!item) return { success: false, error: "Wishlist item not found" };
+
+    await prisma.wishlistItem.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    await logDelete("wishlist_item", id, item.name);
+    revalidatePath("/wishlist");
+    revalidatePath("/trash");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to soft delete wishlist item:", error);
+    return { success: false, error: "Failed to delete wishlist item" };
   }
 }
 
@@ -455,6 +478,28 @@ export async function restoreAccount(
   }
 }
 
+export async function restoreWishlistItem(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const item = await prisma.wishlistItem.findUnique({ where: { id } });
+    if (!item) return { success: false, error: "Wishlist item not found" };
+
+    await prisma.wishlistItem.update({
+      where: { id },
+      data: { deletedAt: null },
+    });
+
+    await logRestore("wishlist_item", id, item.name);
+    revalidatePath("/wishlist");
+    revalidatePath("/trash");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to restore wishlist item:", error);
+    return { success: false, error: "Failed to restore wishlist item" };
+  }
+}
+
 // ============================================================
 // PERMANENT DELETE ACTIONS
 // ============================================================
@@ -571,6 +616,22 @@ export async function permanentDeleteAccount(
   }
 }
 
+export async function permanentDeleteWishlistItem(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await prisma.wishlistItem.delete({ where: { id } });
+    revalidatePath("/trash");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to permanently delete wishlist item:", error);
+    return {
+      success: false,
+      error: "Failed to permanently delete wishlist item",
+    };
+  }
+}
+
 // ============================================================
 // FETCH DELETED ITEMS
 // ============================================================
@@ -584,6 +645,7 @@ export interface DeletedItemsData {
   recurringExpenses: RecurringExpense[];
   oneTimeBills: OneTimeBill[];
   banks: Bank[];
+  wishlistItems: WishlistItem[];
 }
 
 export async function getDeletedItems(): Promise<DeletedItemsData> {
@@ -596,6 +658,7 @@ export async function getDeletedItems(): Promise<DeletedItemsData> {
     recurringExpenses,
     oneTimeBills,
     banks,
+    wishlistItems,
   ] = await Promise.all([
     prisma.email.findMany({
       where: onlyDeleted,
@@ -629,6 +692,10 @@ export async function getDeletedItems(): Promise<DeletedItemsData> {
       where: onlyDeleted,
       orderBy: { deletedAt: "desc" },
     }),
+    prisma.wishlistItem.findMany({
+      where: onlyDeleted,
+      orderBy: { deletedAt: "desc" },
+    }),
   ]);
 
   return {
@@ -640,6 +707,7 @@ export async function getDeletedItems(): Promise<DeletedItemsData> {
     recurringExpenses: recurringExpenses as RecurringExpense[],
     oneTimeBills: oneTimeBills as OneTimeBill[],
     banks: banks as Bank[],
+    wishlistItems: wishlistItems as WishlistItem[],
   };
 }
 
@@ -661,6 +729,7 @@ export async function emptyTrash(): Promise<{
       prisma.recurringExpense.deleteMany({ where: onlyDeleted }),
       prisma.oneTimeBill.deleteMany({ where: onlyDeleted }),
       prisma.bank.deleteMany({ where: onlyDeleted }),
+      prisma.wishlistItem.deleteMany({ where: onlyDeleted }),
     ]);
     revalidatePath("/trash");
     return { success: true };

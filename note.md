@@ -14,6 +14,4 @@
 4. **Search & Filtering**  
    Add global search across accounts/expenses with debounced input. Could use `nuqs` for URL-based state.
 
-10. **Backup & Restore**  
-    Add database backup/restore functionality—especially important for self-hosted homelabs.
 

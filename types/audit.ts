@@ -15,7 +15,8 @@ export type AuditEntity =
   | "credit"
   | "recurring_expense"
   | "one_time_bill"
-  | "bank";
+  | "bank"
+  | "wishlist_item";
 
 // ============================================================
 // CHANGE TRACKING
@@ -70,4 +71,3 @@ export interface CreateAuditLogInput {
   changes?: AuditChanges | undefined;
   metadata?: AuditMetadata | undefined;
 }
-
