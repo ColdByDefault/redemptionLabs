@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Trash2, MapPin, Edit2 } from "lucide-react";
+import { ExternalLink, Trash2, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,10 +45,10 @@ export function WishlistCard({
               }}
             />
             {/* Gradient overlay for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
+          <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-muted to-muted-foreground/10">
             <span className="text-5xl opacity-50">📦</span>
           </div>
         )}

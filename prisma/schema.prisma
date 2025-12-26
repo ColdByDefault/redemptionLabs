@@ -15,14 +15,26 @@ datasource db {
 // ============================================================
 
 model User {
-  id             String     @id @default(cuid())
-  username       String     @unique
-  email          String     @unique
-  hashedPassword String
-  enabledPlugins String[]   @default([])
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  documents      Document[]
+  id                String             @id @default(cuid())
+  username          String             @unique
+  email             String             @unique
+  hashedPassword    String
+  enabledPlugins    String[]           @default([])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  documents         Document[]
+  emails            Email[]
+  accounts          Account[]
+  incomes           Income[]
+  debts             Debt[]
+  credits           Credit[]
+  recurringExpenses RecurringExpense[]
+  oneTimeBills      OneTimeBill[]
+  banks             Bank[]
+  wishlistItems     WishlistItem[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  sectionTimestamps SectionTimestamp[]
 
   @@map("users")
 }
@@ -84,7 +96,7 @@ enum AuthMethod {
 
 model Email {
   id           String        @id @default(cuid())
-  email        String        @unique
+  email        String
   alias        String?
   category     EmailCategory
   tier         AccountTier
@@ -92,32 +104,40 @@ model Email {
   billingCycle BillingCycle?
   password     String
   notes        String?
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   deletedAt    DateTime?
   accounts     Account[]
 
+  @@unique([email, userId])
+  @@index([userId])
   @@map("emails")
 }
 
 model Account {
-  id           String       @id @default(cuid())
-  provider     String       @unique
+  id           String        @id @default(cuid())
+  provider     String
   tier         AccountTier
   price        Float?
   dueDate      DateTime?
   billingCycle BillingCycle?
-  authMethods  AuthMethod[] @default([none])
+  authMethods  AuthMethod[]  @default([none])
   username     String?
   password     String?
   notes        String?
   emailId      String
-  email        Email        @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  email        Email         @relation(fields: [emailId], references: [id], onDelete: Cascade)
   linkedBankId String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   deletedAt    DateTime?
 
+  @@unique([provider, userId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -168,10 +188,13 @@ model Income {
   cycle           PaymentCycle
   nextPaymentDate DateTime?
   notes           String?
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   deletedAt       DateTime?
 
+  @@index([userId])
   @@map("incomes")
 }
 
@@ -186,10 +209,13 @@ model Debt {
   dueDate         DateTime?
   monthsRemaining Int?
   notes           String?
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   deletedAt       DateTime?
 
+  @@index([userId])
   @@map("debts")
 }
 
@@ -201,30 +227,36 @@ model Credit {
   interestRate Float
   dueDate      DateTime?
   notes        String?
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
 
+  @@index([userId])
   @@map("credits")
 }
 
 model RecurringExpense {
-  id           String          @id @default(cuid())
-  name         String
-  amount       Float
-  dueDate      DateTime?
-  cycle        RecurringCycle
-  trialType    TrialType       @default(none)
-  trialEndDate DateTime?
-  category     ExpenseCategory
-  linkedCreditId String?       // Optional link to a credit being paid back
-  linkedDebtId   String?       // Optional link to a debt being paid back
-  linkedBankId   String?       // Optional link to bank for payment
-  notes        String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  deletedAt    DateTime?
+  id             String          @id @default(cuid())
+  name           String
+  amount         Float
+  dueDate        DateTime?
+  cycle          RecurringCycle
+  trialType      TrialType       @default(none)
+  trialEndDate   DateTime?
+  category       ExpenseCategory
+  linkedCreditId String?         // Optional link to a credit being paid back
+  linkedDebtId   String?         // Optional link to a debt being paid back
+  linkedBankId   String?         // Optional link to bank for payment
+  notes          String?
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
 
+  @@index([userId])
   @@map("recurring_expenses")
 }
 
@@ -237,24 +269,31 @@ model OneTimeBill {
   isPaid       Boolean  @default(false)
   linkedBankId String?  // Optional link to bank for payment
   notes        String?
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
 
+  @@index([userId])
   @@map("one_time_bills")
 }
 
 model Bank {
   id                String   @id @default(cuid())
-  name              BankName @unique
+  name              BankName
   displayName       String
   balance           Float    @default(0)
   lastBalanceUpdate DateTime @default(now()) // When balance was last updated
   notes             String?
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   deletedAt         DateTime?
 
+  @@unique([name, userId])
+  @@index([userId])
   @@map("banks")
 }
 
@@ -273,9 +312,13 @@ enum SectionName {
 
 model SectionTimestamp {
   id        String      @id @default(cuid())
-  section   SectionName @unique
+  section   SectionName
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   updatedAt DateTime    @default(now())
 
+  @@unique([section, userId])
+  @@index([userId])
   @@map("section_timestamps")
 }
 
@@ -309,8 +352,11 @@ model Notification {
   isRead    Boolean          @default(false)
   entityId  String?          // Optional reference to related entity
   metadata  Json?            // Additional context data
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime         @default(now())
 
+  @@index([userId])
   @@index([isRead])
   @@index([createdAt])
   @@map("notifications")
@@ -357,8 +403,11 @@ model AuditLog {
   entityName String?     // Human-readable identifier (e.g., email address, account name)
   changes    Json?       // Stores { field: { old: value, new: value } }
   metadata   Json?       // Additional context (e.g., IP address, user agent)
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime    @default(now())
 
+  @@index([userId])
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")
@@ -369,17 +418,20 @@ model AuditLog {
 // ============================================================
 
 model WishlistItem {
-  id          String   @id @default(cuid())
-  name        String
-  price       Float
-  whereToBuy  String
-  needRate    NeedRate
-  reason      String?
-  links       String[] @default([])
-  imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  id         String    @id @default(cuid())
+  name       String
+  price      Float
+  whereToBuy String
+  needRate   NeedRate
+  reason     String?
+  links      String[]  @default([])
+  imageUrl   String?
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
+  @@index([userId])
   @@map("wishlist_items")
 }

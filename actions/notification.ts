@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -9,6 +10,23 @@ import type {
   NotificationMetadata,
   NotificationResponse,
 } from "@/types/notification";
+
+// ============================================================
+// HELPER: Get authenticated user ID
+// ============================================================
+
+async function getAuthenticatedUserId(): Promise<string> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Not authenticated");
+  }
+  return session.user.id;
+}
+
+async function getOptionalUserId(): Promise<string | null> {
+  const session = await auth();
+  return session?.user?.id ?? null;
+}
 
 // Helper to convert null to Prisma.JsonNull for JSON fields
 function toJsonValue(
@@ -27,13 +45,21 @@ function toJsonValue(
 export async function getNotifications(
   limit: number = 50
 ): Promise<NotificationResponse> {
+  const userId = await getOptionalUserId();
+
+  // Return empty response if not authenticated
+  if (!userId) {
+    return { notifications: [], unreadCount: 0 };
+  }
+
   const notifications = await prisma.notification.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
     take: limit,
   });
 
   const unreadCount = await prisma.notification.count({
-    where: { isRead: false },
+    where: { userId, isRead: false },
   });
 
   return {
@@ -43,8 +69,15 @@ export async function getNotifications(
 }
 
 export async function getUnreadCount(): Promise<number> {
+  const userId = await getOptionalUserId();
+
+  // Return 0 if not authenticated
+  if (!userId) {
+    return 0;
+  }
+
   const count = await prisma.notification.count({
-    where: { isRead: false },
+    where: { userId, isRead: false },
   });
   return count;
 }
@@ -60,12 +93,14 @@ export async function createNotification(input: {
   metadata?: NotificationMetadata | null;
 }): Promise<{ success: boolean; notification?: Notification; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const notification = await prisma.notification.create({
       data: {
         type: input.type,
         message: input.message,
         entityId: input.entityId ?? null,
         metadata: toJsonValue(input.metadata),
+        userId,
       },
     });
     revalidatePath("/");
@@ -80,8 +115,9 @@ export async function markNotificationAsRead(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.notification.update({
-      where: { id },
+    const userId = await getAuthenticatedUserId();
+    await prisma.notification.updateMany({
+      where: { id, userId },
       data: { isRead: true },
     });
     revalidatePath("/");
@@ -97,8 +133,9 @@ export async function markAllNotificationsAsRead(): Promise<{
   error?: string;
 }> {
   try {
+    const userId = await getAuthenticatedUserId();
     await prisma.notification.updateMany({
-      where: { isRead: false },
+      where: { userId, isRead: false },
       data: { isRead: true },
     });
     revalidatePath("/");
@@ -116,8 +153,9 @@ export async function deleteNotification(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.notification.delete({
-      where: { id },
+    const userId = await getAuthenticatedUserId();
+    await prisma.notification.deleteMany({
+      where: { id, userId },
     });
     revalidatePath("/");
     return { success: true };
@@ -133,8 +171,9 @@ export async function deleteAllReadNotifications(): Promise<{
   error?: string;
 }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const result = await prisma.notification.deleteMany({
-      where: { isRead: true },
+      where: { userId, isRead: true },
     });
     revalidatePath("/");
     return { success: true, count: result.count };
@@ -157,12 +196,14 @@ export async function createBulkNotifications(
   }>
 ): Promise<{ success: boolean; count?: number; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const result = await prisma.notification.createMany({
       data: notifications.map((n) => ({
         type: n.type,
         message: n.message,
         entityId: n.entityId ?? null,
         metadata: toJsonValue(n.metadata),
+        userId,
       })),
       skipDuplicates: true,
     });
@@ -183,11 +224,13 @@ export async function hasRecentNotification(
   entityId: string,
   withinHours: number = 24
 ): Promise<boolean> {
+  const userId = await getAuthenticatedUserId();
   const cutoff = new Date();
   cutoff.setHours(cutoff.getHours() - withinHours);
 
   const existing = await prisma.notification.findFirst({
     where: {
+      userId,
       type,
       entityId,
       createdAt: { gte: cutoff },

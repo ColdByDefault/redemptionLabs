@@ -13,7 +13,7 @@ export function LoginForm(): React.ReactElement {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -30,8 +30,14 @@ export function LoginForm(): React.ReactElement {
       router.push("/");
       router.refresh();
     } else {
-      toast.error(result.error);
-      setErrors({ form: result.error });
+      // Use field-level errors if available, otherwise show general error
+      if (result.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
+        setErrors(result.fieldErrors);
+        toast.error("Please fix the errors below");
+      } else {
+        toast.error(result.error);
+        setErrors({ form: result.error });
+      }
     }
 
     setIsLoading(false);
@@ -50,18 +56,22 @@ export function LoginForm(): React.ReactElement {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="identifier">Email or Username</Label>
           <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            value={formData.email}
+            id="identifier"
+            type="text"
+            placeholder="you@example.com or username"
+            value={formData.identifier}
             onChange={(e) =>
-              setFormData((prev) => ({ ...prev, email: e.target.value }))
+              setFormData((prev) => ({ ...prev, identifier: e.target.value }))
             }
             disabled={isLoading}
             required
+            className={errors.identifier ? "border-red-500" : ""}
           />
+          {errors.identifier && (
+            <p className="text-xs text-red-500">{errors.identifier}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -76,7 +86,11 @@ export function LoginForm(): React.ReactElement {
             }
             disabled={isLoading}
             required
+            className={errors.password ? "border-red-500" : ""}
           />
+          {errors.password && (
+            <p className="text-xs text-red-500">{errors.password}</p>
+          )}
         </div>
 
         {errors.form && <p className="text-sm text-red-500">{errors.form}</p>}

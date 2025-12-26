@@ -1,17 +1,31 @@
 "use server";
 
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { notDeleted, logCreate, logUpdate } from "@/lib/audit";
 import type { WishlistItem, NeedRate } from "@/types/wishlist";
 
 // ============================================================
+// HELPER: Get authenticated user ID
+// ============================================================
+
+async function getAuthenticatedUserId(): Promise<string> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Not authenticated");
+  }
+  return session.user.id;
+}
+
+// ============================================================
 // READ ACTIONS
 // ============================================================
 
 export async function getWishlistItems(): Promise<WishlistItem[]> {
+  const userId = await getAuthenticatedUserId();
   const items = await prisma.wishlistItem.findMany({
-    where: notDeleted,
+    where: { ...notDeleted, userId },
     orderBy: {
       createdAt: "desc",
     },
@@ -23,9 +37,11 @@ export async function getWishlistItems(): Promise<WishlistItem[]> {
 export async function getWishlistItemById(
   id: string
 ): Promise<WishlistItem | null> {
+  const userId = await getAuthenticatedUserId();
   const item = await prisma.wishlistItem.findFirst({
     where: {
       id,
+      userId,
       ...notDeleted,
     },
   });
@@ -51,6 +67,7 @@ export async function createWishlistItem(
   input: CreateWishlistItemInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const item = await prisma.wishlistItem.create({
       data: {
         name: input.name,
@@ -60,6 +77,7 @@ export async function createWishlistItem(
         reason: input.reason ?? null,
         links: input.links ?? [],
         imageUrl: input.imageUrl ?? null,
+        userId,
       },
     });
 
@@ -91,10 +109,11 @@ export async function updateWishlistItem(
   input: UpdateWishlistItemInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const { id, ...data } = input;
 
-    const existing = await prisma.wishlistItem.findUnique({
-      where: { id },
+    const existing = await prisma.wishlistItem.findFirst({
+      where: { id, userId },
     });
 
     if (!existing) {
@@ -129,6 +148,17 @@ export async function deleteWishlistItem(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
+
+    // Verify ownership before deleting
+    const existing = await prisma.wishlistItem.findFirst({
+      where: { id, userId },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Wishlist item not found" };
+    }
+
     await prisma.wishlistItem.delete({
       where: { id },
     });

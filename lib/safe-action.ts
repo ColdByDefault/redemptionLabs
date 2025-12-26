@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 // ============================================================
 // TYPES
@@ -6,7 +6,7 @@ import { z } from "zod";
 
 export type ActionResult<T> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string; fieldErrors?: Record<string, string> };
 
 export type ValidationError = {
   field: string;
@@ -33,6 +33,19 @@ export async function safeAction<T>(
     return { success: true, data };
   } catch (error) {
     console.error("[SafeAction Error]:", error);
+
+    // Handle Zod validation errors with field-level details
+    if (error instanceof ZodError) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of error.issues) {
+        const field = issue.path.join(".");
+        if (field && !fieldErrors[field]) {
+          fieldErrors[field] = issue.message;
+        }
+      }
+      const firstError = error.issues[0]?.message ?? "Validation failed";
+      return { success: false, error: firstError, fieldErrors };
+    }
 
     if (error instanceof Error) {
       return { success: false, error: error.message };

@@ -39,6 +39,24 @@ export async function getUserByUsername(username: string) {
 }
 
 /**
+ * Get user by email or username (for login)
+ */
+export async function getUserByEmailOrUsername(identifier: string) {
+  const normalizedIdentifier = identifier.toLowerCase();
+
+  // Check if it looks like an email
+  if (identifier.includes("@")) {
+    return getUserByEmail(normalizedIdentifier);
+  }
+
+  // Try username first, then email as fallback
+  const userByUsername = await getUserByUsername(normalizedIdentifier);
+  if (userByUsername) return userByUsername;
+
+  return getUserByEmail(normalizedIdentifier);
+}
+
+/**
  * Get user by ID
  */
 export async function getUserById(id: string) {

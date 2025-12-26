@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logDelete, logRestore, onlyDeleted } from "@/lib/audit";
@@ -15,6 +16,18 @@ import type { Email, Account } from "@/types/account";
 import type { WishlistItem } from "@/types/wishlist";
 
 // ============================================================
+// HELPER: Get authenticated user ID
+// ============================================================
+
+async function getAuthenticatedUserId(): Promise<string> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Not authenticated");
+  }
+  return session.user.id;
+}
+
+// ============================================================
 // SOFT DELETE ACTIONS
 // ============================================================
 
@@ -22,7 +35,8 @@ export async function softDeleteIncome(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const income = await prisma.income.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const income = await prisma.income.findFirst({ where: { id, userId } });
     if (!income) return { success: false, error: "Income not found" };
 
     await prisma.income.update({
@@ -44,7 +58,8 @@ export async function softDeleteDebt(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const debt = await prisma.debt.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const debt = await prisma.debt.findFirst({ where: { id, userId } });
     if (!debt) return { success: false, error: "Debt not found" };
 
     await prisma.debt.update({
@@ -66,7 +81,8 @@ export async function softDeleteCredit(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const credit = await prisma.credit.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const credit = await prisma.credit.findFirst({ where: { id, userId } });
     if (!credit) return { success: false, error: "Credit not found" };
 
     await prisma.credit.update({
@@ -88,7 +104,10 @@ export async function softDeleteRecurringExpense(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const expense = await prisma.recurringExpense.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const expense = await prisma.recurringExpense.findFirst({
+      where: { id, userId },
+    });
     if (!expense)
       return { success: false, error: "Recurring expense not found" };
 
@@ -111,7 +130,8 @@ export async function softDeleteOneTimeBill(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const bill = await prisma.oneTimeBill.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const bill = await prisma.oneTimeBill.findFirst({ where: { id, userId } });
     if (!bill) return { success: false, error: "One-time bill not found" };
 
     await prisma.oneTimeBill.update({
@@ -133,7 +153,8 @@ export async function softDeleteBank(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const bank = await prisma.bank.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const bank = await prisma.bank.findFirst({ where: { id, userId } });
     if (!bank) return { success: false, error: "Bank not found" };
 
     await prisma.bank.update({
@@ -155,24 +176,31 @@ export async function softDeleteEmail(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const email = await prisma.email.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const email = await prisma.email.findFirst({ where: { id, userId } });
     if (!email) return { success: false, error: "Email not found" };
 
     // Soft delete associated accounts
     await prisma.account.updateMany({
-      where: { emailId: id },
+      where: { emailId: id, userId },
       data: { deletedAt: new Date() },
     });
 
     // Soft delete associated recurring expenses
     await prisma.recurringExpense.updateMany({
-      where: { notes: { contains: `Auto-added from email: ${email.email}` } },
+      where: {
+        userId,
+        notes: { contains: `Auto-added from email: ${email.email}` },
+      },
       data: { deletedAt: new Date() },
     });
 
     // Soft delete associated one-time bills
     await prisma.oneTimeBill.updateMany({
-      where: { notes: { contains: `Auto-added from email: ${email.email}` } },
+      where: {
+        userId,
+        notes: { contains: `Auto-added from email: ${email.email}` },
+      },
       data: { deletedAt: new Date() },
     });
 
@@ -196,12 +224,14 @@ export async function softDeleteAccount(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const account = await prisma.account.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const account = await prisma.account.findFirst({ where: { id, userId } });
     if (!account) return { success: false, error: "Account not found" };
 
     // Soft delete associated recurring expenses
     await prisma.recurringExpense.updateMany({
       where: {
+        userId,
         notes: { contains: `Auto-added from account: ${account.provider}` },
       },
       data: { deletedAt: new Date() },
@@ -210,6 +240,7 @@ export async function softDeleteAccount(
     // Soft delete associated one-time bills
     await prisma.oneTimeBill.updateMany({
       where: {
+        userId,
         notes: { contains: `Auto-added from account: ${account.provider}` },
       },
       data: { deletedAt: new Date() },
@@ -235,7 +266,8 @@ export async function softDeleteWishlistItem(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const item = await prisma.wishlistItem.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const item = await prisma.wishlistItem.findFirst({ where: { id, userId } });
     if (!item) return { success: false, error: "Wishlist item not found" };
 
     await prisma.wishlistItem.update({
@@ -261,7 +293,8 @@ export async function restoreIncome(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const income = await prisma.income.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const income = await prisma.income.findFirst({ where: { id, userId } });
     if (!income) return { success: false, error: "Income not found" };
 
     await prisma.income.update({
@@ -283,7 +316,8 @@ export async function restoreDebt(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const debt = await prisma.debt.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const debt = await prisma.debt.findFirst({ where: { id, userId } });
     if (!debt) return { success: false, error: "Debt not found" };
 
     await prisma.debt.update({
@@ -305,7 +339,8 @@ export async function restoreCredit(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const credit = await prisma.credit.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const credit = await prisma.credit.findFirst({ where: { id, userId } });
     if (!credit) return { success: false, error: "Credit not found" };
 
     await prisma.credit.update({
@@ -327,7 +362,10 @@ export async function restoreRecurringExpense(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const expense = await prisma.recurringExpense.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const expense = await prisma.recurringExpense.findFirst({
+      where: { id, userId },
+    });
     if (!expense)
       return { success: false, error: "Recurring expense not found" };
 
@@ -350,7 +388,8 @@ export async function restoreOneTimeBill(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const bill = await prisma.oneTimeBill.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const bill = await prisma.oneTimeBill.findFirst({ where: { id, userId } });
     if (!bill) return { success: false, error: "One-time bill not found" };
 
     await prisma.oneTimeBill.update({
@@ -372,7 +411,8 @@ export async function restoreBank(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const bank = await prisma.bank.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const bank = await prisma.bank.findFirst({ where: { id, userId } });
     if (!bank) return { success: false, error: "Bank not found" };
 
     await prisma.bank.update({
@@ -394,18 +434,20 @@ export async function restoreEmail(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const email = await prisma.email.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const email = await prisma.email.findFirst({ where: { id, userId } });
     if (!email) return { success: false, error: "Email not found" };
 
     // Restore associated accounts
     await prisma.account.updateMany({
-      where: { emailId: id, deletedAt: { not: null } },
+      where: { emailId: id, userId, deletedAt: { not: null } },
       data: { deletedAt: null },
     });
 
     // Restore associated recurring expenses
     await prisma.recurringExpense.updateMany({
       where: {
+        userId,
         notes: { contains: `Auto-added from email: ${email.email}` },
         deletedAt: { not: null },
       },
@@ -415,6 +457,7 @@ export async function restoreEmail(
     // Restore associated one-time bills
     await prisma.oneTimeBill.updateMany({
       where: {
+        userId,
         notes: { contains: `Auto-added from email: ${email.email}` },
         deletedAt: { not: null },
       },
@@ -441,12 +484,14 @@ export async function restoreAccount(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const account = await prisma.account.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const account = await prisma.account.findFirst({ where: { id, userId } });
     if (!account) return { success: false, error: "Account not found" };
 
     // Restore associated recurring expenses
     await prisma.recurringExpense.updateMany({
       where: {
+        userId,
         notes: { contains: `Auto-added from account: ${account.provider}` },
         deletedAt: { not: null },
       },
@@ -456,6 +501,7 @@ export async function restoreAccount(
     // Restore associated one-time bills
     await prisma.oneTimeBill.updateMany({
       where: {
+        userId,
         notes: { contains: `Auto-added from account: ${account.provider}` },
         deletedAt: { not: null },
       },
@@ -482,7 +528,8 @@ export async function restoreWishlistItem(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const item = await prisma.wishlistItem.findUnique({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    const item = await prisma.wishlistItem.findFirst({ where: { id, userId } });
     if (!item) return { success: false, error: "Wishlist item not found" };
 
     await prisma.wishlistItem.update({
@@ -508,7 +555,8 @@ export async function permanentDeleteIncome(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.income.delete({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    await prisma.income.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -521,7 +569,8 @@ export async function permanentDeleteDebt(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.debt.delete({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    await prisma.debt.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -534,7 +583,8 @@ export async function permanentDeleteCredit(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.credit.delete({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    await prisma.credit.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -547,7 +597,8 @@ export async function permanentDeleteRecurringExpense(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.recurringExpense.delete({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    await prisma.recurringExpense.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -563,7 +614,8 @@ export async function permanentDeleteOneTimeBill(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.oneTimeBill.delete({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    await prisma.oneTimeBill.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -579,7 +631,8 @@ export async function permanentDeleteBank(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.bank.delete({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    await prisma.bank.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -592,9 +645,10 @@ export async function permanentDeleteEmail(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     // Also permanently delete accounts associated with this email
-    await prisma.account.deleteMany({ where: { emailId: id } });
-    await prisma.email.delete({ where: { id } });
+    await prisma.account.deleteMany({ where: { emailId: id, userId } });
+    await prisma.email.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -607,7 +661,8 @@ export async function permanentDeleteAccount(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.account.delete({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    await prisma.account.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -620,7 +675,8 @@ export async function permanentDeleteWishlistItem(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.wishlistItem.delete({ where: { id } });
+    const userId = await getAuthenticatedUserId();
+    await prisma.wishlistItem.deleteMany({ where: { id, userId } });
     revalidatePath("/trash");
     return { success: true };
   } catch (error) {
@@ -649,6 +705,7 @@ export interface DeletedItemsData {
 }
 
 export async function getDeletedItems(): Promise<DeletedItemsData> {
+  const userId = await getAuthenticatedUserId();
   const [
     emails,
     accounts,
@@ -661,39 +718,39 @@ export async function getDeletedItems(): Promise<DeletedItemsData> {
     wishlistItems,
   ] = await Promise.all([
     prisma.email.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
     prisma.account.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
     prisma.income.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
     prisma.debt.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
     prisma.credit.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
     prisma.recurringExpense.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
     prisma.oneTimeBill.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
     prisma.bank.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
     prisma.wishlistItem.findMany({
-      where: onlyDeleted,
+      where: { ...onlyDeleted, userId },
       orderBy: { deletedAt: "desc" },
     }),
   ]);
@@ -720,16 +777,17 @@ export async function emptyTrash(): Promise<{
   error?: string;
 }> {
   try {
+    const userId = await getAuthenticatedUserId();
     await Promise.all([
-      prisma.account.deleteMany({ where: onlyDeleted }),
-      prisma.email.deleteMany({ where: onlyDeleted }),
-      prisma.income.deleteMany({ where: onlyDeleted }),
-      prisma.debt.deleteMany({ where: onlyDeleted }),
-      prisma.credit.deleteMany({ where: onlyDeleted }),
-      prisma.recurringExpense.deleteMany({ where: onlyDeleted }),
-      prisma.oneTimeBill.deleteMany({ where: onlyDeleted }),
-      prisma.bank.deleteMany({ where: onlyDeleted }),
-      prisma.wishlistItem.deleteMany({ where: onlyDeleted }),
+      prisma.account.deleteMany({ where: { ...onlyDeleted, userId } }),
+      prisma.email.deleteMany({ where: { ...onlyDeleted, userId } }),
+      prisma.income.deleteMany({ where: { ...onlyDeleted, userId } }),
+      prisma.debt.deleteMany({ where: { ...onlyDeleted, userId } }),
+      prisma.credit.deleteMany({ where: { ...onlyDeleted, userId } }),
+      prisma.recurringExpense.deleteMany({ where: { ...onlyDeleted, userId } }),
+      prisma.oneTimeBill.deleteMany({ where: { ...onlyDeleted, userId } }),
+      prisma.bank.deleteMany({ where: { ...onlyDeleted, userId } }),
+      prisma.wishlistItem.deleteMany({ where: { ...onlyDeleted, userId } }),
     ]);
     revalidatePath("/trash");
     return { success: true };

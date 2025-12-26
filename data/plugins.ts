@@ -20,17 +20,7 @@ export const plugins: Plugin[] = [
     category: "analytics",
     isCore: false,
     isPremium: true,
-  },
-  {
-    id: "crm",
-    name: "Contact Manager",
-    description: "Manage your contacts and relationships in one place.",
-    iconName: "Users",
-    route: "/contacts",
-    category: "communication",
-    isCore: false,
-    isPremium: true,
-  },
+  }
 ];
 
 export function getPluginById(id: string): Plugin | undefined {

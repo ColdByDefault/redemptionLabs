@@ -32,8 +32,14 @@ export function RegisterForm(): React.ReactElement {
       router.push("/");
       router.refresh();
     } else {
-      toast.error(result.error);
-      setErrors({ form: result.error });
+      // Use field-level errors if available, otherwise show general error
+      if (result.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
+        setErrors(result.fieldErrors);
+        toast.error("Please fix the errors below");
+      } else {
+        toast.error(result.error);
+        setErrors({ form: result.error });
+      }
     }
 
     setIsLoading(false);
@@ -63,7 +69,11 @@ export function RegisterForm(): React.ReactElement {
             }
             disabled={isLoading}
             required
+            className={errors.username ? "border-red-500" : ""}
           />
+          {errors.username && (
+            <p className="text-xs text-red-500">{errors.username}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -78,7 +88,11 @@ export function RegisterForm(): React.ReactElement {
             }
             disabled={isLoading}
             required
+            className={errors.email ? "border-red-500" : ""}
           />
+          {errors.email && (
+            <p className="text-xs text-red-500">{errors.email}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -93,10 +107,15 @@ export function RegisterForm(): React.ReactElement {
             }
             disabled={isLoading}
             required
+            className={errors.password ? "border-red-500" : ""}
           />
-          <p className="text-xs text-zinc-500">
-            At least 8 characters with uppercase, lowercase, and number
-          </p>
+          {errors.password ? (
+            <p className="text-xs text-red-500">{errors.password}</p>
+          ) : (
+            <p className="text-xs text-zinc-500">
+              At least 8 characters with uppercase, lowercase, and number
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -114,7 +133,11 @@ export function RegisterForm(): React.ReactElement {
             }
             disabled={isLoading}
             required
+            className={errors.confirmPassword ? "border-red-500" : ""}
           />
+          {errors.confirmPassword && (
+            <p className="text-xs text-red-500">{errors.confirmPassword}</p>
+          )}
         </div>
 
         {errors.form && <p className="text-sm text-red-500">{errors.form}</p>}

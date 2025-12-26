@@ -18,7 +18,7 @@ export async function loginAction(data: LoginInput) {
 
     try {
       await signIn("credentials", {
-        email: validated.email,
+        identifier: validated.identifier,
         password: validated.password,
         redirect: false,
       });
@@ -28,7 +28,7 @@ export async function loginAction(data: LoginInput) {
       if (error instanceof AuthError) {
         switch (error.type) {
           case "CredentialsSignin":
-            throw new Error("Invalid email or password");
+            throw new Error("Invalid email/username or password");
           default:
             throw new Error("Something went wrong");
         }

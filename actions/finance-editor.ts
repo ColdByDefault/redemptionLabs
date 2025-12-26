@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { updateSectionTimestamp } from "@/actions/finance";
@@ -10,6 +11,18 @@ import type {
   ExpenseCategory,
   BankName,
 } from "@/types/finance";
+
+// ============================================================
+// HELPER: Get authenticated user ID
+// ============================================================
+
+async function getAuthenticatedUserId(): Promise<string> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Not authenticated");
+  }
+  return session.user.id;
+}
 
 // ============================================================
 // INCOME CRUD
@@ -36,6 +49,7 @@ export async function createIncome(
   input: CreateIncomeInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     await prisma.income.create({
       data: {
         source: input.source,
@@ -43,6 +57,7 @@ export async function createIncome(
         cycle: input.cycle,
         nextPaymentDate: input.nextPaymentDate ?? null,
         notes: input.notes ?? null,
+        userId,
       },
     });
     await updateSectionTimestamp("income_overview");
@@ -58,9 +73,10 @@ export async function updateIncome(
   input: UpdateIncomeInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const { id, ...data } = input;
-    await prisma.income.update({
-      where: { id },
+    await prisma.income.updateMany({
+      where: { id, userId },
       data,
     });
     await updateSectionTimestamp("income_overview");
@@ -76,8 +92,9 @@ export async function deleteIncome(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.income.delete({
-      where: { id },
+    const userId = await getAuthenticatedUserId();
+    await prisma.income.deleteMany({
+      where: { id, userId },
     });
     await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
@@ -121,6 +138,7 @@ export async function createDebt(
   input: CreateDebtInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     await prisma.debt.create({
       data: {
         name: input.name,
@@ -132,6 +150,7 @@ export async function createDebt(
         dueDate: input.dueDate ?? null,
         monthsRemaining: input.monthsRemaining ?? null,
         notes: input.notes ?? null,
+        userId,
       },
     });
     await updateSectionTimestamp("income_overview");
@@ -147,9 +166,10 @@ export async function updateDebt(
   input: UpdateDebtInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const { id, ...data } = input;
-    await prisma.debt.update({
-      where: { id },
+    await prisma.debt.updateMany({
+      where: { id, userId },
       data,
     });
     await updateSectionTimestamp("income_overview");
@@ -165,8 +185,9 @@ export async function deleteDebt(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.debt.delete({
-      where: { id },
+    const userId = await getAuthenticatedUserId();
+    await prisma.debt.deleteMany({
+      where: { id, userId },
     });
     await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
@@ -204,6 +225,7 @@ export async function createCredit(
   input: CreateCreditInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     await prisma.credit.create({
       data: {
         provider: input.provider,
@@ -212,6 +234,7 @@ export async function createCredit(
         interestRate: input.interestRate,
         dueDate: input.dueDate ?? null,
         notes: input.notes ?? null,
+        userId,
       },
     });
     await updateSectionTimestamp("income_overview");
@@ -227,9 +250,10 @@ export async function updateCredit(
   input: UpdateCreditInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const { id, ...data } = input;
-    await prisma.credit.update({
-      where: { id },
+    await prisma.credit.updateMany({
+      where: { id, userId },
       data,
     });
     await updateSectionTimestamp("income_overview");
@@ -245,8 +269,9 @@ export async function deleteCredit(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.credit.delete({
-      where: { id },
+    const userId = await getAuthenticatedUserId();
+    await prisma.credit.deleteMany({
+      where: { id, userId },
     });
     await updateSectionTimestamp("income_overview");
     revalidatePath("/finance");
@@ -294,6 +319,7 @@ export async function createRecurringExpense(
   input: CreateRecurringExpenseInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     await prisma.recurringExpense.create({
       data: {
         name: input.name,
@@ -307,6 +333,7 @@ export async function createRecurringExpense(
         linkedDebtId: input.linkedDebtId ?? null,
         linkedBankId: input.linkedBankId ?? null,
         notes: input.notes ?? null,
+        userId,
       },
     });
     await updateSectionTimestamp("recurring_expenses");
@@ -322,9 +349,10 @@ export async function updateRecurringExpense(
   input: UpdateRecurringExpenseInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const { id, ...data } = input;
-    await prisma.recurringExpense.update({
-      where: { id },
+    await prisma.recurringExpense.updateMany({
+      where: { id, userId },
       data,
     });
     await updateSectionTimestamp("recurring_expenses");
@@ -340,8 +368,9 @@ export async function deleteRecurringExpense(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.recurringExpense.delete({
-      where: { id },
+    const userId = await getAuthenticatedUserId();
+    await prisma.recurringExpense.deleteMany({
+      where: { id, userId },
     });
     await updateSectionTimestamp("recurring_expenses");
     revalidatePath("/finance");
@@ -381,6 +410,7 @@ export async function createOneTimeBill(
   input: CreateOneTimeBillInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     await prisma.oneTimeBill.create({
       data: {
         name: input.name,
@@ -390,6 +420,7 @@ export async function createOneTimeBill(
         isPaid: input.isPaid ?? false,
         linkedBankId: input.linkedBankId ?? null,
         notes: input.notes ?? null,
+        userId,
       },
     });
     await updateSectionTimestamp("one_time_bills");
@@ -405,9 +436,10 @@ export async function updateOneTimeBill(
   input: UpdateOneTimeBillInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const { id, ...data } = input;
-    await prisma.oneTimeBill.update({
-      where: { id },
+    await prisma.oneTimeBill.updateMany({
+      where: { id, userId },
       data,
     });
     await updateSectionTimestamp("one_time_bills");
@@ -423,8 +455,9 @@ export async function deleteOneTimeBill(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.oneTimeBill.delete({
-      where: { id },
+    const userId = await getAuthenticatedUserId();
+    await prisma.oneTimeBill.deleteMany({
+      where: { id, userId },
     });
     await updateSectionTimestamp("one_time_bills");
     revalidatePath("/finance");
@@ -458,6 +491,7 @@ export async function createBank(
   input: CreateBankInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     await prisma.bank.create({
       data: {
         name: input.name,
@@ -465,6 +499,7 @@ export async function createBank(
         balance: input.balance ?? 0,
         lastBalanceUpdate: new Date(),
         notes: input.notes ?? null,
+        userId,
       },
     });
     await updateSectionTimestamp("banks");
@@ -480,14 +515,15 @@ export async function updateBank(
   input: UpdateBankInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const userId = await getAuthenticatedUserId();
     const { id, balance, ...restData } = input;
     // If balance is being updated, also update lastBalanceUpdate
     const data =
       balance !== undefined
         ? { ...restData, balance, lastBalanceUpdate: new Date() }
         : restData;
-    await prisma.bank.update({
-      where: { id },
+    await prisma.bank.updateMany({
+      where: { id, userId },
       data,
     });
     await updateSectionTimestamp("banks");
@@ -503,8 +539,9 @@ export async function deleteBank(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.bank.delete({
-      where: { id },
+    const userId = await getAuthenticatedUserId();
+    await prisma.bank.deleteMany({
+      where: { id, userId },
     });
     await updateSectionTimestamp("banks");
     revalidatePath("/finance");
