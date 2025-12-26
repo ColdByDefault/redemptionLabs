@@ -101,6 +101,49 @@ export { ExampleTable } from "./ExampleTable";
 export { ExampleSummary } from "./ExampleSummary";
 ```
 
+### 5. State Management (`store/`)
+
+Client-side state using `useSyncExternalStore` for hydration-safe state.
+
+- Use `useSyncExternalStore` to avoid hydration mismatches
+- Export custom hooks from store modules
+- Barrel export from `store/index.ts`
+- No `useState` + `useEffect` pattern for mounting state
+
+```typescript
+// store/mounted.ts
+import { useSyncExternalStore } from "react";
+
+let mounted = false;
+const listeners = new Set<() => void>();
+
+function subscribe(callback: () => void): () => void {
+  listeners.add(callback);
+  return () => listeners.delete(callback);
+}
+
+function getSnapshot(): boolean {
+  return mounted;
+}
+
+function getServerSnapshot(): boolean {
+  return false;
+}
+
+if (typeof window !== "undefined") {
+  mounted = true;
+}
+
+export function useMounted(): boolean {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+```
+
+```typescript
+// store/index.ts
+export { useMounted } from "./mounted";
+```
+
 ## Component Guidelines
 
 ### Props Interfaces
@@ -133,4 +176,5 @@ export { ExampleSummary } from "./ExampleSummary";
 | Types      | `types/<feature>.ts`    | lowercase singular |
 | Data       | `data/<feature>.ts`     | lowercase plural   |
 | Logic      | `lib/<feature>.ts`      | lowercase plural   |
+| Store      | `store/<feature>.ts`    | lowercase singular |
 | Components | `components/<feature>/` | PascalCase         |

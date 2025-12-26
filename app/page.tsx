@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { navLinks } from "@/data/navbar";
+import { useMounted } from "@/store";
 
 export default function Home(): React.ReactElement {
   const { resolvedTheme } = useTheme();
+  const mounted = useMounted();
 
-  const backgroundImage = resolvedTheme === "light" ? "/bg2.png" : "/bg.jpg";
+  const backgroundImage =
+    mounted && resolvedTheme === "light" ? "/bg2.png" : "/bg.jpg";
 
   return (
     <div

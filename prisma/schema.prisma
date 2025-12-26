@@ -9,3 +9,73 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum EmailCategory {
+  primary
+  secondary
+  temp
+}
+
+enum AccountTier {
+  free
+  paid
+}
+
+enum BillingCycle {
+  monthly
+  yearly
+  lifetime
+  onetime
+}
+
+enum AuthMethod {
+  none
+  twofa
+  passkey
+  sms
+  authenticator
+  other
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+model Email {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  category     EmailCategory
+  tier         AccountTier
+  price        Float?
+  billingCycle BillingCycle?
+  password     String
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  accounts     Account[]
+
+  @@map("emails")
+}
+
+model Account {
+  id           String       @id @default(cuid())
+  provider     String
+  tier         AccountTier
+  price        Float?
+  dueDate      DateTime?
+  billingCycle BillingCycle?
+  authMethod   AuthMethod   @default(none)
+  username     String?
+  password     String?
+  notes        String?
+  emailId      String
+  email        Email        @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("accounts")
+}
