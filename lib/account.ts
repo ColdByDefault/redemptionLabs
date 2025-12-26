@@ -3,6 +3,7 @@ import type {
   AccountTier,
   BillingCycle,
   AuthMethod,
+  EmailAlias,
 } from "@/types/account";
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
@@ -102,4 +103,23 @@ export function formatEmailCategory(category: EmailCategory): string {
     temp: "Temporary",
   };
   return labels[category];
+}
+
+// Email alias color classes
+export function getEmailAliasColor(alias: EmailAlias): string {
+  const colors: Record<EmailAlias, string> = {
+    main: "bg-purple-500 text-white border-purple-500",
+    secondary: "bg-indigo-500 text-white border-indigo-500",
+  };
+  return colors[alias];
+}
+
+// Format email alias for display
+export function formatEmailAlias(alias: EmailAlias | null): string {
+  if (!alias) return "";
+  const labels: Record<EmailAlias, string> = {
+    main: "Main",
+    secondary: "Secondary",
+  };
+  return labels[alias];
 }

@@ -16,7 +16,7 @@ export default async function AccountsPage(): Promise<React.ReactElement> {
         </p>
       </div>
       <EmailsBoard emails={emails} />
-      <SubsBoard accounts={accounts} />
+      <SubsBoard accounts={accounts} emails={emails} />
     </div>
   );
 }

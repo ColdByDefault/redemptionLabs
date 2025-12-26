@@ -41,6 +41,11 @@ enum AuthMethod {
   other
 }
 
+enum EmailAlias {
+  main
+  secondary
+}
+
 // ============================================================
 // MODELS
 // ============================================================
@@ -48,6 +53,7 @@ enum AuthMethod {
 model Email {
   id           String        @id @default(cuid())
   email        String        @unique
+  alias        EmailAlias?
   category     EmailCategory
   tier         AccountTier
   price        Float?
