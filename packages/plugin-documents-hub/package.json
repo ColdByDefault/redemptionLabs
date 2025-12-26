@@ -1,0 +1,66 @@
+{
+  "name": "@coldbydefault/plugin-documents-hub",
+  "version": "1.0.0",
+  "description": "Documents Hub plugin for Redemption - Upload, organize, and manage your PDF documents securely.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./manifest": {
+      "import": "./dist/manifest.mjs",
+      "require": "./dist/manifest.js",
+      "types": "./dist/manifest.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "redemption",
+    "redemption-plugin",
+    "plugin",
+    "documents",
+    "pdf"
+  ],
+  "author": "ColdByDefault",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ColdByDefault/redemptionLabs.git",
+    "directory": "packages/plugin-documents-hub"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "next": ">=14.0.0",
+    "lucide-react": ">=0.400.0",
+    "sonner": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "next": "^16.0.0",
+    "lucide-react": "^0.562.0",
+    "sonner": "^2.0.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0"
+  }
+}

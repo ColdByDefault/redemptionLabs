@@ -1,9 +1,20 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { DocumentsHub } from "@/components/documents";
 import { getDocumentsByUserId } from "@/lib/document";
-import { isPluginEnabled } from "@/lib/plugin";
+import { isPluginEnabled, isPluginInstalled } from "@/lib/plugin";
 import { getUserById } from "@/lib/auth";
+
+// Try to import from plugin package, fallback to local components
+let DocumentsHub: React.ComponentType<{ documents: unknown[] }>;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const plugin = require("@coldbydefault/plugin-documents-hub");
+  DocumentsHub = plugin.DocumentsHub;
+} catch {
+  // Fallback to local components during development
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  DocumentsHub = require("@/components/documents").DocumentsHub;
+}
 
 export default async function DocumentsPage(): Promise<React.ReactElement> {
   const session = await auth();
@@ -16,6 +27,11 @@ export default async function DocumentsPage(): Promise<React.ReactElement> {
   const user = await getUserById(session.user.id);
   if (!user) {
     redirect("/login");
+  }
+
+  // Check if plugin is installed
+  if (!isPluginInstalled("documents-hub")) {
+    redirect("/marketplace?install=documents-hub");
   }
 
   // Check if user has this plugin enabled

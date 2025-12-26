@@ -15,10 +15,12 @@ export interface Plugin {
   iconName: PluginIconName;
   route: string;
   category: PluginCategory;
-  isCore: boolean; // Core plugins are always visible (like Finance, Accounts)
+  isCore: boolean;
   isPremium: boolean;
+  packageName?: string; // npm package name for installable plugins
 }
 
 export interface PluginWithStatus extends Plugin {
   isEnabled: boolean;
+  isInstalled?: boolean;
 }

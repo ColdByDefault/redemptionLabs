@@ -3,6 +3,12 @@
 - change middleware to proxy
 - include wishlist in trash and backup
 - filterId user for backups too
+- fix error 
+``` bash
+PS N:\PRIVATE\Almighty_Proj\redemption> npx prisma generate
+[dotenv@17.2.3] injecting env (2) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+Loaded Prisma config from prisma.config.ts.
+```
 
 ---
 

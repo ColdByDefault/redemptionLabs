@@ -2,10 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, FileText, BarChart3, Users } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  FileText,
+  BarChart3,
+  Users,
+  Download,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { togglePluginAction } from "@/actions/plugin";
+import {
+  installPluginAction,
+  uninstallPluginAction,
+} from "@/actions/plugin-install";
 import { toast } from "sonner";
 import type { PluginWithStatus, PluginIconName } from "@/types/plugin";
 import type { LucideIcon } from "lucide-react";
@@ -23,10 +35,65 @@ interface PluginCardProps {
 export function PluginCard({ plugin }: PluginCardProps): React.ReactElement {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<
+    "install" | "uninstall" | "toggle" | null
+  >(null);
   const Icon = iconMap[plugin.iconName];
+
+  async function handleInstall() {
+    setIsLoading(true);
+    setLoadingAction("install");
+
+    const result = await installPluginAction(plugin.id);
+
+    if (result.success) {
+      toast.success(result.message);
+      if (result.requiresRestart) {
+        toast.info("Please run the rebuild script to complete installation.", {
+          duration: 10000,
+        });
+      }
+      router.refresh();
+    } else {
+      toast.error(result.message);
+    }
+
+    setIsLoading(false);
+    setLoadingAction(null);
+  }
+
+  async function handleUninstall() {
+    if (!confirm(`Are you sure you want to uninstall ${plugin.name}?`)) {
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadingAction("uninstall");
+
+    const result = await uninstallPluginAction(plugin.id);
+
+    if (result.success) {
+      toast.success(result.message);
+      if (result.requiresRestart) {
+        toast.info(
+          "Please run the rebuild script to complete uninstallation.",
+          {
+            duration: 10000,
+          }
+        );
+      }
+      router.refresh();
+    } else {
+      toast.error(result.message);
+    }
+
+    setIsLoading(false);
+    setLoadingAction(null);
+  }
 
   async function handleToggle() {
     setIsLoading(true);
+    setLoadingAction("toggle");
 
     const result = await togglePluginAction(plugin.id, !plugin.isEnabled);
 
@@ -40,7 +107,11 @@ export function PluginCard({ plugin }: PluginCardProps): React.ReactElement {
     }
 
     setIsLoading(false);
+    setLoadingAction(null);
   }
+
+  // Determine what action buttons to show
+  const isInstalled = plugin.isInstalled !== false; // Default to installed for backward compat
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
@@ -55,6 +126,11 @@ export function PluginCard({ plugin }: PluginCardProps): React.ReactElement {
                 {plugin.name}
               </h3>
               {plugin.isPremium && <Badge variant="secondary">Premium</Badge>}
+              {!isInstalled && (
+                <Badge variant="outline" className="text-xs">
+                  Not Installed
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               {plugin.category}
@@ -62,23 +138,61 @@ export function PluginCard({ plugin }: PluginCardProps): React.ReactElement {
           </div>
         </div>
 
-        <Button
-          variant={plugin.isEnabled ? "outline" : "default"}
-          size="sm"
-          onClick={handleToggle}
-          disabled={isLoading || plugin.isPremium}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : plugin.isEnabled ? (
-            <>
-              <Check className="mr-1 h-4 w-4" />
-              Enabled
-            </>
+        <div className="flex items-center gap-2">
+          {!isInstalled ? (
+            // Not installed - show install button
+            <Button
+              size="sm"
+              onClick={handleInstall}
+              disabled={isLoading || plugin.isPremium}
+            >
+              {loadingAction === "install" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Download className="mr-1 h-4 w-4" />
+                  Install
+                </>
+              )}
+            </Button>
           ) : (
-            "Enable"
+            // Installed - show enable/disable and uninstall
+            <>
+              <Button
+                variant={plugin.isEnabled ? "outline" : "default"}
+                size="sm"
+                onClick={handleToggle}
+                disabled={isLoading || plugin.isPremium}
+              >
+                {loadingAction === "toggle" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : plugin.isEnabled ? (
+                  <>
+                    <Check className="mr-1 h-4 w-4" />
+                    Enabled
+                  </>
+                ) : (
+                  "Enable"
+                )}
+              </Button>
+              {plugin.packageName && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleUninstall}
+                  disabled={isLoading}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  {loadingAction === "uninstall" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+            </>
           )}
-        </Button>
+        </div>
       </div>
 
       <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
