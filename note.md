@@ -14,17 +14,6 @@
 4. **Search & Filtering**  
    Add global search across accounts/expenses with debounced input. Could use `nuqs` for URL-based state.
 
-5. **Data Export (CSV/PDF)**  
-   Add export functionality for finance data—useful for tax season or backups.
-
-
-7. **Charts & Visualization**  
-   Add `recharts` or `chart.js` for:
-   - Monthly expense breakdown (pie chart)
-   - Income vs expenses over time (line chart)
-   - Bank balance history
-
-
 10. **Backup & Restore**  
     Add database backup/restore functionality—especially important for self-hosted homelabs.
 

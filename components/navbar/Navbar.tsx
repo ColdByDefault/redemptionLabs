@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Trash2, HardDrive } from "lucide-react";
 import { navLinks } from "@/data/navbar";
 import { ModeToggle } from "@/components/theme";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/types/notification";
 import { NotificationBell } from "@/components/notifications";
+import { BackupDialog } from "@/components/backup";
 
 interface NavbarProps {
   notifications?: Notification[];
@@ -52,6 +53,14 @@ export function Navbar({
           <NotificationBell
             notifications={notifications}
             unreadCount={unreadCount}
+          />
+          <BackupDialog
+            trigger={
+              <Button variant="ghost" size="icon">
+                <HardDrive className="h-[1.2rem] w-[1.2rem] text-zinc-500 dark:text-zinc-400" />
+                <span className="sr-only">Backup & Restore</span>
+              </Button>
+            }
           />
           <Button variant="ghost" size="icon" asChild>
             <Link href="/trash">
