@@ -15,3 +15,4 @@
    Add global search across accounts/expenses with debounced input. Could use `nuqs` for URL-based state.
 
 
+2
