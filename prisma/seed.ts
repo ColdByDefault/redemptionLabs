@@ -15,81 +15,14 @@ async function main(): Promise<void> {
   // Create emails
   const mainEmail = await prisma.email.create({
     data: {
-      email: "abo.ayash.yazan@gmail.com",
-      category: "primary",
-      tier: "free",
+      email: "",
+      category: "",
+      tier: "",
       password: "",
       notes: null,
     },
   });
-
-  await prisma.email.create({
-    data: {
-      email: "stonylonesome7@icloud.com",
-      category: "secondary",
-      tier: "paid",
-      price: 0.99,
-      billingCycle: "monthly",
-      password: "",
-      notes: null,
-    },
-  });
-
-  await prisma.email.create({
-    data: {
-      email: "yazan.abo-ayash@avarno.de",
-      category: "secondary",
-      tier: "free",
-      password: "",
-      notes: "ends soon",
-    },
-  });
-
-  await prisma.email.create({
-    data: {
-      email: "yazan.abo-ayash@education.gfn",
-      category: "secondary",
-      tier: "free",
-      password: "",
-      notes: "ends soon",
-    },
-  });
-
-  // Create accounts linked to main gmail
-  await prisma.account.create({
-    data: {
-      provider: "Spotify",
-      tier: "paid",
-      price: 17.5,
-      billingCycle: "monthly",
-      authMethods: ["none"],
-      emailId: mainEmail.id,
-    },
-  });
-
-  await prisma.account.create({
-    data: {
-      provider: "GitHub",
-      tier: "free",
-      authMethods: ["none"],
-      emailId: mainEmail.id,
-    },
-  });
-
-  await prisma.account.create({
-    data: {
-      provider: "GitHub Copilot",
-      tier: "paid",
-      price: 35,
-      billingCycle: "monthly",
-      authMethods: ["none"],
-      emailId: mainEmail.id,
-    },
-  });
-
-  console.log("Seed completed!");
-}
-
+  };
 main()
   .catch((e) => {
     console.error(e);
