@@ -1,6 +1,6 @@
 - check timestamps updates after db reset
 - ~~one btn to delete all notifications~~ ✅
-- ~~rename middleware to proxy~~ ⚠️ (Next.js requires `middleware.ts` exact name)
+- ~~rename middleware to proxy~~ ✅
 - ~~include wishlist in trash and backup~~ ✅
 - ~~Include userID for backups too, and check if the back up is for the same user that download it~~ ✅
 
