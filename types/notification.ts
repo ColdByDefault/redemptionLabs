@@ -69,4 +69,5 @@ export type NotificationAction =
   | { type: "mark_read"; id: string }
   | { type: "mark_all_read" }
   | { type: "delete"; id: string }
+  | { type: "delete_all" }
   | { type: "add"; notification: Notification };

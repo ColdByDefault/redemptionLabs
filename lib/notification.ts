@@ -178,6 +178,8 @@ export function notificationReducer(
       return state.map((n) => ({ ...n, isRead: true }));
     case "delete":
       return state.filter((n) => n.id !== action.id);
+    case "delete_all":
+      return [];
     case "add":
       return [action.notification, ...state];
     default:

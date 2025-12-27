@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { notDeleted } from "@/lib/audit";
 import type {
@@ -14,10 +15,23 @@ const BACKUP_VERSION = "1.0.0";
 const APP_NAME = "Redemption";
 
 // ============================================================
+// HELPER: Get authenticated user ID
+// ============================================================
+
+async function getAuthenticatedUserId(): Promise<string> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Not authenticated");
+  }
+  return session.user.id;
+}
+
+// ============================================================
 // BACKUP ACTIONS
 // ============================================================
 
 export async function getBackupStats(): Promise<BackupStats> {
+  const userId = await getAuthenticatedUserId();
   const [
     emailCount,
     accountCount,
@@ -27,15 +41,17 @@ export async function getBackupStats(): Promise<BackupStats> {
     recurringExpenseCount,
     oneTimeBillCount,
     bankCount,
+    wishlistItemCount,
   ] = await Promise.all([
-    prisma.email.count({ where: notDeleted }),
-    prisma.account.count({ where: notDeleted }),
-    prisma.income.count({ where: notDeleted }),
-    prisma.debt.count({ where: notDeleted }),
-    prisma.credit.count({ where: notDeleted }),
-    prisma.recurringExpense.count({ where: notDeleted }),
-    prisma.oneTimeBill.count({ where: notDeleted }),
-    prisma.bank.count({ where: notDeleted }),
+    prisma.email.count({ where: { ...notDeleted, userId } }),
+    prisma.account.count({ where: { ...notDeleted, userId } }),
+    prisma.income.count({ where: { ...notDeleted, userId } }),
+    prisma.debt.count({ where: { ...notDeleted, userId } }),
+    prisma.credit.count({ where: { ...notDeleted, userId } }),
+    prisma.recurringExpense.count({ where: { ...notDeleted, userId } }),
+    prisma.oneTimeBill.count({ where: { ...notDeleted, userId } }),
+    prisma.bank.count({ where: { ...notDeleted, userId } }),
+    prisma.wishlistItem.count({ where: { ...notDeleted, userId } }),
   ]);
 
   const totalRecords =
@@ -46,7 +62,8 @@ export async function getBackupStats(): Promise<BackupStats> {
     creditCount +
     recurringExpenseCount +
     oneTimeBillCount +
-    bankCount;
+    bankCount +
+    wishlistItemCount;
 
   return {
     emails: emailCount,
@@ -57,11 +74,13 @@ export async function getBackupStats(): Promise<BackupStats> {
     recurringExpenses: recurringExpenseCount,
     oneTimeBills: oneTimeBillCount,
     banks: bankCount,
+    wishlistItems: wishlistItemCount,
     totalRecords,
   };
 }
 
 export async function createBackup(): Promise<BackupData> {
+  const userId = await getAuthenticatedUserId();
   const [
     emails,
     accounts,
@@ -71,30 +90,44 @@ export async function createBackup(): Promise<BackupData> {
     recurringExpenses,
     oneTimeBills,
     banks,
+    wishlistItems,
   ] = await Promise.all([
-    prisma.email.findMany({ where: notDeleted, orderBy: { createdAt: "asc" } }),
+    prisma.email.findMany({
+      where: { ...notDeleted, userId },
+      orderBy: { createdAt: "asc" },
+    }),
     prisma.account.findMany({
-      where: notDeleted,
+      where: { ...notDeleted, userId },
       orderBy: { createdAt: "asc" },
     }),
     prisma.income.findMany({
-      where: notDeleted,
+      where: { ...notDeleted, userId },
       orderBy: { createdAt: "asc" },
     }),
-    prisma.debt.findMany({ where: notDeleted, orderBy: { createdAt: "asc" } }),
+    prisma.debt.findMany({
+      where: { ...notDeleted, userId },
+      orderBy: { createdAt: "asc" },
+    }),
     prisma.credit.findMany({
-      where: notDeleted,
+      where: { ...notDeleted, userId },
       orderBy: { createdAt: "asc" },
     }),
     prisma.recurringExpense.findMany({
-      where: notDeleted,
+      where: { ...notDeleted, userId },
       orderBy: { createdAt: "asc" },
     }),
     prisma.oneTimeBill.findMany({
-      where: notDeleted,
+      where: { ...notDeleted, userId },
       orderBy: { createdAt: "asc" },
     }),
-    prisma.bank.findMany({ where: notDeleted, orderBy: { createdAt: "asc" } }),
+    prisma.bank.findMany({
+      where: { ...notDeleted, userId },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.wishlistItem.findMany({
+      where: { ...notDeleted, userId },
+      orderBy: { createdAt: "asc" },
+    }),
   ]);
 
   const totalRecords =
@@ -105,13 +138,15 @@ export async function createBackup(): Promise<BackupData> {
     credits.length +
     recurringExpenses.length +
     oneTimeBills.length +
-    banks.length;
+    banks.length +
+    wishlistItems.length;
 
   const metadata: BackupMetadata = {
     version: BACKUP_VERSION,
     createdAt: new Date().toISOString(),
     appName: APP_NAME,
     totalRecords,
+    userId,
   };
 
   return {
@@ -125,6 +160,7 @@ export async function createBackup(): Promise<BackupData> {
       recurringExpenses,
       oneTimeBills,
       banks,
+      wishlistItems,
     },
   };
 }
@@ -138,6 +174,7 @@ export async function restoreBackup(
   mode: RestoreMode
 ): Promise<RestoreResult> {
   try {
+    const userId = await getAuthenticatedUserId();
     const backup: BackupData = JSON.parse(backupJson);
 
     // Validate backup structure
@@ -155,19 +192,29 @@ export async function restoreBackup(
       };
     }
 
+    // Validate userId matches if present in backup
+    if (backup.metadata.userId && backup.metadata.userId !== userId) {
+      return {
+        success: false,
+        message:
+          "This backup belongs to a different user and cannot be restored to your account",
+      };
+    }
+
     const { data } = backup;
 
-    // If replace mode, clear existing data first
+    // If replace mode, clear existing data first (only for current user)
     if (mode === "replace") {
       await prisma.$transaction([
-        prisma.account.deleteMany({}),
-        prisma.email.deleteMany({}),
-        prisma.recurringExpense.deleteMany({}),
-        prisma.oneTimeBill.deleteMany({}),
-        prisma.income.deleteMany({}),
-        prisma.debt.deleteMany({}),
-        prisma.credit.deleteMany({}),
-        prisma.bank.deleteMany({}),
+        prisma.account.deleteMany({ where: { userId } }),
+        prisma.email.deleteMany({ where: { userId } }),
+        prisma.recurringExpense.deleteMany({ where: { userId } }),
+        prisma.oneTimeBill.deleteMany({ where: { userId } }),
+        prisma.income.deleteMany({ where: { userId } }),
+        prisma.debt.deleteMany({ where: { userId } }),
+        prisma.credit.deleteMany({ where: { userId } }),
+        prisma.bank.deleteMany({ where: { userId } }),
+        prisma.wishlistItem.deleteMany({ where: { userId } }),
       ]);
     }
 
@@ -181,6 +228,7 @@ export async function restoreBackup(
       recurringExpenses: 0,
       oneTimeBills: 0,
       banks: 0,
+      wishlistItems: 0,
     };
 
     // Restore banks first (no dependencies)
@@ -205,6 +253,7 @@ export async function restoreBackup(
               balance: bank.balance,
               lastBalanceUpdate: new Date(bank.lastBalanceUpdate),
               notes: bank.notes,
+              userId,
               createdAt: new Date(bank.createdAt),
               updatedAt: new Date(bank.updatedAt),
               deletedAt: bank.deletedAt ? new Date(bank.deletedAt) : null,
@@ -219,6 +268,7 @@ export async function restoreBackup(
               balance: bank.balance,
               lastBalanceUpdate: new Date(bank.lastBalanceUpdate),
               notes: bank.notes,
+              userId,
               createdAt: new Date(bank.createdAt),
               updatedAt: new Date(bank.updatedAt),
               deletedAt: bank.deletedAt ? new Date(bank.deletedAt) : null,
@@ -259,6 +309,7 @@ export async function restoreBackup(
               billingCycle: email.billingCycle,
               password: email.password,
               notes: email.notes,
+              userId,
               createdAt: new Date(email.createdAt),
               updatedAt: new Date(email.updatedAt),
               deletedAt: email.deletedAt ? new Date(email.deletedAt) : null,
@@ -276,6 +327,7 @@ export async function restoreBackup(
               billingCycle: email.billingCycle,
               password: email.password,
               notes: email.notes,
+              userId,
               createdAt: new Date(email.createdAt),
               updatedAt: new Date(email.updatedAt),
               deletedAt: email.deletedAt ? new Date(email.deletedAt) : null,
@@ -322,6 +374,7 @@ export async function restoreBackup(
               notes: account.notes,
               emailId: account.emailId,
               linkedBankId: account.linkedBankId,
+              userId,
               createdAt: new Date(account.createdAt),
               updatedAt: new Date(account.updatedAt),
               deletedAt: account.deletedAt ? new Date(account.deletedAt) : null,
@@ -342,6 +395,7 @@ export async function restoreBackup(
               notes: account.notes,
               emailId: account.emailId,
               linkedBankId: account.linkedBankId,
+              userId,
               createdAt: new Date(account.createdAt),
               updatedAt: new Date(account.updatedAt),
               deletedAt: account.deletedAt ? new Date(account.deletedAt) : null,
@@ -380,6 +434,7 @@ export async function restoreBackup(
                 ? new Date(income.nextPaymentDate)
                 : null,
               notes: income.notes,
+              userId,
               createdAt: new Date(income.createdAt),
               updatedAt: new Date(income.updatedAt),
               deletedAt: income.deletedAt ? new Date(income.deletedAt) : null,
@@ -396,6 +451,7 @@ export async function restoreBackup(
                 ? new Date(income.nextPaymentDate)
                 : null,
               notes: income.notes,
+              userId,
               createdAt: new Date(income.createdAt),
               updatedAt: new Date(income.updatedAt),
               deletedAt: income.deletedAt ? new Date(income.deletedAt) : null,
@@ -438,6 +494,7 @@ export async function restoreBackup(
               dueDate: debt.dueDate ? new Date(debt.dueDate) : null,
               monthsRemaining: debt.monthsRemaining,
               notes: debt.notes,
+              userId,
               createdAt: new Date(debt.createdAt),
               updatedAt: new Date(debt.updatedAt),
               deletedAt: debt.deletedAt ? new Date(debt.deletedAt) : null,
@@ -456,6 +513,7 @@ export async function restoreBackup(
               dueDate: debt.dueDate ? new Date(debt.dueDate) : null,
               monthsRemaining: debt.monthsRemaining,
               notes: debt.notes,
+              userId,
               createdAt: new Date(debt.createdAt),
               updatedAt: new Date(debt.updatedAt),
               deletedAt: debt.deletedAt ? new Date(debt.deletedAt) : null,
@@ -492,6 +550,7 @@ export async function restoreBackup(
               interestRate: credit.interestRate,
               dueDate: credit.dueDate ? new Date(credit.dueDate) : null,
               notes: credit.notes,
+              userId,
               createdAt: new Date(credit.createdAt),
               updatedAt: new Date(credit.updatedAt),
               deletedAt: credit.deletedAt ? new Date(credit.deletedAt) : null,
@@ -507,6 +566,7 @@ export async function restoreBackup(
               interestRate: credit.interestRate,
               dueDate: credit.dueDate ? new Date(credit.dueDate) : null,
               notes: credit.notes,
+              userId,
               createdAt: new Date(credit.createdAt),
               updatedAt: new Date(credit.updatedAt),
               deletedAt: credit.deletedAt ? new Date(credit.deletedAt) : null,
@@ -557,6 +617,7 @@ export async function restoreBackup(
               linkedDebtId: expense.linkedDebtId,
               linkedBankId: expense.linkedBankId,
               notes: expense.notes,
+              userId,
               createdAt: new Date(expense.createdAt),
               updatedAt: new Date(expense.updatedAt),
               deletedAt: expense.deletedAt ? new Date(expense.deletedAt) : null,
@@ -579,6 +640,7 @@ export async function restoreBackup(
               linkedDebtId: expense.linkedDebtId,
               linkedBankId: expense.linkedBankId,
               notes: expense.notes,
+              userId,
               createdAt: new Date(expense.createdAt),
               updatedAt: new Date(expense.updatedAt),
               deletedAt: expense.deletedAt ? new Date(expense.deletedAt) : null,
@@ -617,6 +679,7 @@ export async function restoreBackup(
               isPaid: bill.isPaid,
               linkedBankId: bill.linkedBankId,
               notes: bill.notes,
+              userId,
               createdAt: new Date(bill.createdAt),
               updatedAt: new Date(bill.updatedAt),
               deletedAt: bill.deletedAt ? new Date(bill.deletedAt) : null,
@@ -633,6 +696,7 @@ export async function restoreBackup(
               isPaid: bill.isPaid,
               linkedBankId: bill.linkedBankId,
               notes: bill.notes,
+              userId,
               createdAt: new Date(bill.createdAt),
               updatedAt: new Date(bill.updatedAt),
               deletedAt: bill.deletedAt ? new Date(bill.deletedAt) : null,
@@ -640,6 +704,62 @@ export async function restoreBackup(
           });
         }
         stats.oneTimeBills++;
+      } catch {
+        // Skip duplicates in merge mode
+      }
+    }
+
+    // Restore wishlist items
+    for (const item of data.wishlistItems || []) {
+      try {
+        if (mode === "merge") {
+          await prisma.wishlistItem.upsert({
+            where: { id: item.id },
+            update: {
+              name: item.name,
+              price: item.price,
+              whereToBuy: item.whereToBuy,
+              needRate: item.needRate,
+              reason: item.reason,
+              links: item.links,
+              imageUrl: item.imageUrl,
+              updatedAt: new Date(item.updatedAt),
+              deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
+            },
+            create: {
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              whereToBuy: item.whereToBuy,
+              needRate: item.needRate,
+              reason: item.reason,
+              links: item.links,
+              imageUrl: item.imageUrl,
+              userId,
+              createdAt: new Date(item.createdAt),
+              updatedAt: new Date(item.updatedAt),
+              deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
+            },
+          });
+        } else {
+          await prisma.wishlistItem.create({
+            data: {
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              whereToBuy: item.whereToBuy,
+              needRate: item.needRate,
+              reason: item.reason,
+              links: item.links,
+              imageUrl: item.imageUrl,
+              userId,
+              createdAt: new Date(item.createdAt),
+              updatedAt: new Date(item.updatedAt),
+              deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
+            },
+          });
+        }
+        stats.wishlistItems++;
       } catch {
         // Skip duplicates in merge mode
       }
@@ -653,7 +773,8 @@ export async function restoreBackup(
       stats.credits +
       stats.recurringExpenses +
       stats.oneTimeBills +
-      stats.banks;
+      stats.banks +
+      stats.wishlistItems;
 
     return {
       success: true,
@@ -676,7 +797,12 @@ export async function restoreBackup(
 
 export async function validateBackupFile(
   backupJson: string
-): Promise<{ valid: boolean; message: string; stats?: BackupStats }> {
+): Promise<{
+  valid: boolean;
+  message: string;
+  stats?: BackupStats;
+  userId?: string;
+}> {
   try {
     const backup: BackupData = JSON.parse(backupJson);
 
@@ -701,6 +827,7 @@ export async function validateBackupFile(
       recurringExpenses: data.recurringExpenses?.length || 0,
       oneTimeBills: data.oneTimeBills?.length || 0,
       banks: data.banks?.length || 0,
+      wishlistItems: data.wishlistItems?.length || 0,
       totalRecords: 0,
     };
 
@@ -712,12 +839,14 @@ export async function validateBackupFile(
       stats.credits +
       stats.recurringExpenses +
       stats.oneTimeBills +
-      stats.banks;
+      stats.banks +
+      stats.wishlistItems;
 
     return {
       valid: true,
       message: `Valid backup from ${backup.metadata.createdAt}`,
       stats,
+      userId: backup.metadata.userId,
     };
   } catch {
     return { valid: false, message: "Invalid JSON format" };

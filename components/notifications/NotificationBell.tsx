@@ -15,6 +15,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
+  deleteAllNotifications,
 } from "@/actions/notification";
 import { Button } from "@/components/ui/button";
 import {
@@ -155,6 +156,14 @@ export function NotificationBell({
     [addOptimisticAction]
   );
 
+  // Handle delete all with optimistic update
+  const handleDeleteAll = useCallback((): void => {
+    startTransition(async () => {
+      addOptimisticAction({ type: "delete_all" });
+      await deleteAllNotifications();
+    });
+  }, [addOptimisticAction]);
+
   return (
     <div className="relative">
       {/* Bell Button */}
@@ -202,16 +211,44 @@ export function NotificationBell({
               <h3 className="font-semibold">Notifications</h3>
               <div className="flex items-center gap-1">
                 {optimisticUnreadCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleMarkAllRead}
-                    disabled={isPending}
-                  >
-                    <CheckCheck className="h-3 w-3 mr-1" />
-                    Mark all read
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={handleMarkAllRead}
+                          disabled={isPending}
+                        >
+                          <CheckCheck className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Mark all as read</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {optimisticNotifications.length > 0 && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={handleDeleteAll}
+                          disabled={isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete all</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 <Button
                   variant="ghost"

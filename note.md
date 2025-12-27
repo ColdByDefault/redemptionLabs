@@ -1,8 +1,8 @@
 - check timestamps updates after db reset
-- one btn to delete all notifications
-- change middleware to proxy
-- include wishlist in trash and backup
-- filterId user for backups too
+- ~~one btn to delete all notifications~~ ✅
+- ~~rename middleware to proxy~~ ⚠️ (Next.js requires `middleware.ts` exact name)
+- ~~include wishlist in trash and backup~~ ✅
+- ~~Include userID for backups too, and check if the back up is for the same user that download it~~ ✅
 
 ---
 
@@ -11,8 +11,7 @@
 2. **Password Encryption**  
    Passwords are stored as plain strings. Encrypt them with `bcrypt` or use a secrets vault pattern.
 
-4. **Search & Filtering**  
+3. **Search & Filtering**  
    Add global search across accounts/expenses with debounced input. Could use `nuqs` for URL-based state.
-
 
 2

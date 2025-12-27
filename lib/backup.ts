@@ -27,5 +27,7 @@ export function getStatsSummary(stats: BackupStats): string[] {
   if (stats.oneTimeBills > 0)
     summary.push(`${stats.oneTimeBills} one-time bills`);
   if (stats.banks > 0) summary.push(`${stats.banks} banks`);
+  if (stats.wishlistItems > 0)
+    summary.push(`${stats.wishlistItems} wishlist items`);
   return summary;
 }

@@ -183,6 +183,24 @@ export async function deleteAllReadNotifications(): Promise<{
   }
 }
 
+export async function deleteAllNotifications(): Promise<{
+  success: boolean;
+  count?: number;
+  error?: string;
+}> {
+  try {
+    const userId = await getAuthenticatedUserId();
+    const result = await prisma.notification.deleteMany({
+      where: { userId },
+    });
+    revalidatePath("/");
+    return { success: true, count: result.count };
+  } catch (error) {
+    console.error("Failed to delete all notifications:", error);
+    return { success: false, error: "Failed to delete all notifications" };
+  }
+}
+
 // ============================================================
 // BULK NOTIFICATION CREATION (for cron jobs)
 // ============================================================

@@ -10,6 +10,7 @@ import type {
   OneTimeBill,
   Bank,
 } from "@/types/finance";
+import type { WishlistItem } from "@/types/wishlist";
 
 // ============================================================
 // BACKUP DATA TYPES
@@ -20,6 +21,7 @@ export interface BackupMetadata {
   createdAt: string;
   appName: string;
   totalRecords: number;
+  userId?: string;
 }
 
 export interface BackupData {
@@ -33,6 +35,7 @@ export interface BackupData {
     recurringExpenses: RecurringExpense[];
     oneTimeBills: OneTimeBill[];
     banks: Bank[];
+    wishlistItems: WishlistItem[];
   };
 }
 
@@ -54,6 +57,7 @@ export interface RestoreResult {
     recurringExpenses: number;
     oneTimeBills: number;
     banks: number;
+    wishlistItems: number;
   };
 }
 
@@ -66,5 +70,6 @@ export interface BackupStats {
   recurringExpenses: number;
   oneTimeBills: number;
   banks: number;
+  wishlistItems: number;
   totalRecords: number;
 }
