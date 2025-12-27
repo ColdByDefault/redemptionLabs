@@ -63,7 +63,7 @@ export async function registerAction(data: RegisterInput) {
 
     // Sign in the user
     await signIn("credentials", {
-      email: validated.email,
+      identifier: validated.email,
       password: validated.password,
       redirect: false,
     });
