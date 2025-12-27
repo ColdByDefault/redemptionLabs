@@ -1,0 +1,437 @@
+// Prisma Schema for Redemption App
+// PostgreSQL database for Ubuntu + nginx deployment
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// USER & AUTH
+// ============================================================
+
+model User {
+  id                String             @id @default(cuid())
+  username          String             @unique
+  email             String             @unique
+  hashedPassword    String
+  enabledPlugins    String[]           @default([])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  documents         Document[]
+  emails            Email[]
+  accounts          Account[]
+  incomes           Income[]
+  debts             Debt[]
+  credits           Credit[]
+  recurringExpenses RecurringExpense[]
+  oneTimeBills      OneTimeBill[]
+  banks             Bank[]
+  wishlistItems     WishlistItem[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  sectionTimestamps SectionTimestamp[]
+
+  @@map("users")
+}
+
+// ============================================================
+// DOCUMENTS PLUGIN
+// ============================================================
+
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  fileName  String
+  fileSize  Int
+  filePath  String
+  mimeType  String   @default("application/pdf")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("documents")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum EmailCategory {
+  primary
+  secondary
+  temp
+}
+
+enum AccountTier {
+  free
+  paid
+}
+
+enum BillingCycle {
+  monthly
+  yearly
+  lifetime
+  onetime
+}
+
+enum AuthMethod {
+  none
+  twofa
+  passkey
+  sms
+  authenticator
+  other
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+model Email {
+  id           String        @id @default(cuid())
+  email        String
+  alias        String?
+  category     EmailCategory
+  tier         AccountTier
+  price        Float?
+  billingCycle BillingCycle?
+  password     String
+  notes        String?
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+  accounts     Account[]
+
+  @@unique([email, userId])
+  @@index([userId])
+  @@map("emails")
+}
+
+model Account {
+  id           String        @id @default(cuid())
+  provider     String
+  tier         AccountTier
+  price        Float?
+  dueDate      DateTime?
+  billingCycle BillingCycle?
+  authMethods  AuthMethod[]  @default([none])
+  username     String?
+  password     String?
+  notes        String?
+  emailId      String
+  email        Email         @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  linkedBankId String?
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  @@unique([provider, userId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+// ============================================================
+// FINANCE ENUMS
+// ============================================================
+
+enum PaymentCycle {
+  monthly
+  yearly
+  weekly
+  onetime
+}
+
+enum TrialType {
+  none
+  week
+  month
+  custom
+}
+
+enum RecurringCycle {
+  monthly
+  yearly
+  weekly
+}
+
+enum ExpenseCategory {
+  subscription
+  debt
+}
+
+enum BankName {
+  volksbank
+  sparkasse
+  volksbank_visa
+  paypal
+}
+
+// ============================================================
+// FINANCE MODELS
+// ============================================================
+
+model Income {
+  id              String       @id @default(cuid())
+  source          String
+  amount          Float
+  cycle           PaymentCycle
+  nextPaymentDate DateTime?
+  notes           String?
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  @@index([userId])
+  @@map("incomes")
+}
+
+model Debt {
+  id              String       @id @default(cuid())
+  name            String
+  amount          Float
+  remainingAmount Float
+  payTo           String
+  cycle           PaymentCycle
+  paymentMonth    String?      // e.g., "January 2025" - which month this payment is for
+  dueDate         DateTime?
+  monthsRemaining Int?
+  notes           String?
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  @@index([userId])
+  @@map("debts")
+}
+
+model Credit {
+  id           String   @id @default(cuid())
+  provider     String
+  totalLimit   Float    // Total credit limit available
+  usedAmount   Float    @default(0) // Amount currently used
+  interestRate Float
+  dueDate      DateTime?
+  notes        String?
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([userId])
+  @@map("credits")
+}
+
+model RecurringExpense {
+  id             String          @id @default(cuid())
+  name           String
+  amount         Float
+  dueDate        DateTime?
+  cycle          RecurringCycle
+  trialType      TrialType       @default(none)
+  trialEndDate   DateTime?
+  category       ExpenseCategory
+  linkedCreditId String?         // Optional link to a credit being paid back
+  linkedDebtId   String?         // Optional link to a debt being paid back
+  linkedBankId   String?         // Optional link to bank for payment
+  notes          String?
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+
+  @@index([userId])
+  @@map("recurring_expenses")
+}
+
+model OneTimeBill {
+  id           String   @id @default(cuid())
+  name         String
+  amount       Float
+  payTo        String
+  dueDate      DateTime?
+  isPaid       Boolean  @default(false)
+  linkedBankId String?  // Optional link to bank for payment
+  notes        String?
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([userId])
+  @@map("one_time_bills")
+}
+
+model Bank {
+  id                String   @id @default(cuid())
+  name              BankName
+  displayName       String
+  balance           Float    @default(0)
+  lastBalanceUpdate DateTime @default(now()) // When balance was last updated
+  notes             String?
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
+
+  @@unique([name, userId])
+  @@index([userId])
+  @@map("banks")
+}
+
+// ============================================================
+// SECTION TIMESTAMPS
+// ============================================================
+
+enum SectionName {
+  emails
+  accounts
+  banks
+  income_overview
+  recurring_expenses
+  one_time_bills
+}
+
+model SectionTimestamp {
+  id        String      @id @default(cuid())
+  section   SectionName
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt DateTime    @default(now())
+
+  @@unique([section, userId])
+  @@index([userId])
+  @@map("section_timestamps")
+}
+
+// ============================================================
+// NOTIFICATION SYSTEM
+// ============================================================
+
+enum NotificationType {
+  // Cron/automated notifications
+  bill_due
+  bill_overdue
+  low_balance
+  recurring_created
+  payment_reminder
+  // CRUD operation notifications
+  item_created
+  item_updated
+  item_deleted
+  item_restored
+  // Info notifications
+  info
+  success
+  warning
+  error
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  entityId  String?          // Optional reference to related entity
+  metadata  Json?            // Additional context data
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================================
+// AUDIT LOG
+// ============================================================
+
+enum AuditAction {
+  create
+  update
+  delete
+  restore
+}
+
+enum AuditEntity {
+  email
+  account
+  income
+  debt
+  credit
+  recurring_expense
+  one_time_bill
+  bank
+  wishlist_item
+}
+
+// ============================================================
+// WISHLIST ENUMS
+// ============================================================
+
+enum NeedRate {
+  need
+  can_wait
+  luxury
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  action     AuditAction
+  entity     AuditEntity
+  entityId   String
+  entityName String?     // Human-readable identifier (e.g., email address, account name)
+  changes    Json?       // Stores { field: { old: value, new: value } }
+  metadata   Json?       // Additional context (e.g., IP address, user agent)
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================================
+// WISHLIST MODELS
+// ============================================================
+
+model WishlistItem {
+  id         String    @id @default(cuid())
+  name       String
+  price      Float
+  whereToBuy String
+  needRate   NeedRate
+  reason     String?
+  links      String[]  @default([])
+  imageUrl   String?
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  @@index([userId])
+  @@map("wishlist_items")
+}
