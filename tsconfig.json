@@ -39,5 +39,5 @@
     "app/berichHub/page.tsx",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "prisma/seed.ts"]
 }

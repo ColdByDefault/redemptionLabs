@@ -32,6 +32,7 @@ export async function createAuditLog(
       metadata: input.metadata
         ? (input.metadata as unknown as Prisma.InputJsonValue)
         : Prisma.JsonNull,
+      userId: input.userId,
     },
   });
 
@@ -45,14 +46,17 @@ export async function logCreate(
   entity: AuditEntity,
   entityId: string,
   entityName?: string,
+  userId?: string,
   metadata?: AuditMetadata
-): Promise<AuditLog> {
+): Promise<AuditLog | null> {
+  if (!userId) return null;
   return createAuditLog({
     action: "create",
     entity,
     entityId,
     entityName,
     metadata,
+    userId,
   });
 }
 
@@ -65,8 +69,10 @@ export async function logUpdate<T extends Record<string, unknown>>(
   oldData: T,
   newData: Partial<T>,
   entityName?: string,
+  userId?: string,
   metadata?: AuditMetadata
-): Promise<AuditLog> {
+): Promise<AuditLog | null> {
+  if (!userId) return null;
   const changes = computeChanges(oldData, newData);
 
   return createAuditLog({
@@ -76,6 +82,7 @@ export async function logUpdate<T extends Record<string, unknown>>(
     entityName,
     changes: Object.keys(changes).length > 0 ? changes : undefined,
     metadata,
+    userId,
   });
 }
 
@@ -86,14 +93,17 @@ export async function logDelete(
   entity: AuditEntity,
   entityId: string,
   entityName?: string,
+  userId?: string,
   metadata?: AuditMetadata
-): Promise<AuditLog> {
+): Promise<AuditLog | null> {
+  if (!userId) return null;
   return createAuditLog({
     action: "delete",
     entity,
     entityId,
     entityName,
     metadata,
+    userId,
   });
 }
 
@@ -104,14 +114,17 @@ export async function logRestore(
   entity: AuditEntity,
   entityId: string,
   entityName?: string,
+  userId?: string,
   metadata?: AuditMetadata
-): Promise<AuditLog> {
+): Promise<AuditLog | null> {
+  if (!userId) return null;
   return createAuditLog({
     action: "restore",
     entity,
     entityId,
     entityName,
     metadata,
+    userId,
   });
 }
 

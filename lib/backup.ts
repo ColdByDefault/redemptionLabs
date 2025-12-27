@@ -4,8 +4,8 @@ import type { BackupStats } from "@/types/backup";
 
 export function formatBackupFilename(): string {
   const now = new Date();
-  const date = now.toISOString().split("T")[0];
-  const time = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+  const date = now.toISOString().split("T")[0] ?? "unknown";
+  const time = now.toTimeString().split(" ")[0]?.replace(/:/g, "-") ?? "000000";
   return `redemption-backup-${date}_${time}.json`;
 }
 

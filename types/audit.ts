@@ -70,4 +70,5 @@ export interface CreateAuditLogInput {
   entityName?: string | undefined;
   changes?: AuditChanges | undefined;
   metadata?: AuditMetadata | undefined;
+  userId: string;
 }

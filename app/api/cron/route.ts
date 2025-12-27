@@ -47,6 +47,7 @@ interface NotificationToCreate {
   message: string;
   entityId: string | null;
   metadata: NotificationMetadata | null;
+  userId: string;
 }
 
 // ============================================================
@@ -143,6 +144,7 @@ async function processOverdueBills(result: CronResult): Promise<void> {
               amount: bill.amount,
               dueDate: bill.dueDate,
             }),
+            userId: bill.userId,
           });
           result.overdueBillsProcessed++;
         }
@@ -173,6 +175,7 @@ async function processOverdueBills(result: CronResult): Promise<void> {
               amount: expense.amount,
               dueDate: expense.dueDate,
             }),
+            userId: expense.userId,
           });
           result.overdueBillsProcessed++;
         }
@@ -187,6 +190,7 @@ async function processOverdueBills(result: CronResult): Promise<void> {
           message: n.message,
           entityId: n.entityId,
           metadata: toJsonValue(n.metadata),
+          userId: n.userId,
         })),
       });
     }
@@ -242,6 +246,7 @@ async function processUpcomingBills(result: CronResult): Promise<void> {
               amount: bill.amount,
               dueDate: bill.dueDate,
             }),
+            userId: bill.userId,
           });
           result.dueSoonNotifications++;
         }
@@ -272,6 +277,7 @@ async function processUpcomingBills(result: CronResult): Promise<void> {
               amount: expense.amount,
               dueDate: expense.dueDate,
             }),
+            userId: expense.userId,
           });
           result.dueSoonNotifications++;
         }
@@ -286,6 +292,7 @@ async function processUpcomingBills(result: CronResult): Promise<void> {
           message: n.message,
           entityId: n.entityId,
           metadata: toJsonValue(n.metadata),
+          userId: n.userId,
         })),
       });
     }
@@ -361,6 +368,7 @@ async function processRecurringExpenses(result: CronResult): Promise<void> {
           amount: expense.amount,
           dueDate: nextDueDate,
         }),
+        userId: expense.userId,
       });
 
       result.recurringEntriesCreated++;
@@ -374,6 +382,7 @@ async function processRecurringExpenses(result: CronResult): Promise<void> {
           message: n.message,
           entityId: n.entityId,
           metadata: toJsonValue(n.metadata),
+          userId: n.userId,
         })),
       });
     }

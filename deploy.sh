@@ -1,104 +1,140 @@
 #!/bin/bash
 
-# Homelab Landing Page - Next.js Deployment Script
-# This script deploys the Next.js app to your Ubuntu server
+# Deployment script for Redemption App
+# Usage: ./deploy.sh [option]
+# Options:
+#   full     - Full rebuild and restart (default)
+#   env      - Just restart with new env vars
+#   nginx    - Just reload nginx config
+#   db       - Run database migrations
+#   logs     - Show recent logs
+#   status   - Show app status
 
 set -e
 
-echo "==================================="
-echo "Deploying Homelab Landing Page"
-echo "==================================="
-
-# Configuration
-DEPLOY_DIR="/var/www/homelab-landing-nextjs"
-BACKUP_DIR="/var/www/homelab-landing-nextjs-backup"
 APP_NAME="homelab-landing-nextjs"
+APP_DIR="/var/www/homelab-landing-nextjs"
 
 # Colors for output
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Check if Node.js is installed
-if ! command -v node &> /dev/null; then
-    echo -e "${RED}Node.js is not installed. Please install Node.js first.${NC}"
-    exit 1
-fi
+print_status() {
+    echo -e "${GREEN}[✓]${NC} $1"
+}
 
-# Check if PM2 is installed
-if ! command -v pm2 &> /dev/null; then
-    echo -e "${YELLOW}PM2 is not installed. Installing PM2...${NC}"
-    sudo npm install -g pm2
-fi
+print_warning() {
+    echo -e "${YELLOW}[!]${NC} $1"
+}
 
-# Create backup of current deployment if it exists
-if [ -d "$DEPLOY_DIR" ]; then
-    echo -e "${YELLOW}Creating backup of current deployment...${NC}"
-    sudo rm -rf "$BACKUP_DIR"
-    sudo cp -r "$DEPLOY_DIR" "$BACKUP_DIR"
-    echo -e "${GREEN}Backup created at $BACKUP_DIR${NC}"
-fi
+print_error() {
+    echo -e "${RED}[✗]${NC} $1"
+}
 
-# Create deployment directory if it doesn't exist
-echo -e "${YELLOW}Preparing deployment directory...${NC}"
-sudo mkdir -p "$DEPLOY_DIR"
+# Full deployment
+deploy_full() {
+    echo -e "${GREEN}=== Full Deployment ===${NC}"
+    cd "$APP_DIR"
+    
+    print_status "Installing dependencies..."
+    npm install
+    
+    print_status "Building application..."
+    npm run build
+    
+    print_status "Restarting PM2..."
+    pm2 restart "$APP_NAME" --update-env
+    
+    print_status "Deployment complete!"
+    pm2 status "$APP_NAME"
+}
 
-# Copy files to deployment directory
-echo -e "${YELLOW}Copying files to $DEPLOY_DIR...${NC}"
-sudo rsync -av --exclude='node_modules' --exclude='.next' --exclude='.git' \
-    ./ "$DEPLOY_DIR/"
+# Just restart with new env
+deploy_env() {
+    echo -e "${GREEN}=== Restarting with new environment ===${NC}"
+    pm2 restart "$APP_NAME" --update-env
+    print_status "Restart complete!"
+}
 
-# Set ownership to current user
-echo -e "${YELLOW}Setting permissions...${NC}"
-sudo chown -R $USER:$USER "$DEPLOY_DIR"
+# Reload nginx
+deploy_nginx() {
+    echo -e "${GREEN}=== Reloading Nginx ===${NC}"
+    
+    print_status "Testing nginx configuration..."
+    sudo nginx -t
+    
+    print_status "Reloading nginx..."
+    sudo systemctl reload nginx
+    
+    print_status "Nginx reloaded!"
+}
 
-# Change to deployment directory
-cd "$DEPLOY_DIR"
+# Database migrations
+deploy_db() {
+    echo -e "${GREEN}=== Running Database Migrations ===${NC}"
+    cd "$APP_DIR"
+    
+    print_status "Running migrations..."
+    npx prisma migrate deploy
+    
+    print_status "Generating Prisma client..."
+    npx prisma generate
+    
+    print_status "Migrations complete!"
+}
 
-# Install dependencies
-echo -e "${YELLOW}Installing dependencies...${NC}"
-npm install --production=false
+# Show logs
+show_logs() {
+    echo -e "${GREEN}=== Recent Logs ===${NC}"
+    pm2 logs "$APP_NAME" --lines 30 --nostream
+}
 
-# Build the Next.js app
-echo -e "${YELLOW}Building Next.js application...${NC}"
-npm run build
+# Show status
+show_status() {
+    echo -e "${GREEN}=== App Status ===${NC}"
+    pm2 status "$APP_NAME"
+    echo ""
+    echo -e "${GREEN}=== Health Check ===${NC}"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081)
+    if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "307" ]; then
+        print_status "App responding (HTTP $HTTP_CODE)"
+    else
+        print_error "App not responding correctly (HTTP $HTTP_CODE)"
+    fi
+}
 
-# Create PM2 log directory if it doesn't exist
-sudo mkdir -p /var/log/pm2
-
-# Stop PM2 app if it's running
-if pm2 list | grep -q "$APP_NAME"; then
-    echo -e "${YELLOW}Stopping existing PM2 process...${NC}"
-    pm2 delete "$APP_NAME"
-fi
-
-# Start the app with PM2
-echo -e "${YELLOW}Starting application with PM2...${NC}"
-pm2 start ecosystem.config.js
-
-# Save PM2 process list
-pm2 save
-
-# Setup PM2 to run on system startup
-pm2 startup systemd -u $USER --hp $HOME
-
-echo -e "${GREEN}==================================="
-echo -e "Deployment completed successfully!"
-echo -e "===================================${NC}"
-echo ""
-echo -e "Application: ${GREEN}$APP_NAME${NC}"
-echo -e "Location: ${GREEN}$DEPLOY_DIR${NC}"
-echo -e "Port: ${GREEN}3000${NC}"
-echo ""
-echo "Useful PM2 commands:"
-echo "  pm2 status              - Check app status"
-echo "  pm2 logs $APP_NAME      - View logs"
-echo "  pm2 restart $APP_NAME   - Restart app"
-echo "  pm2 stop $APP_NAME      - Stop app"
-echo "  pm2 monit               - Monitor resources"
-echo ""
-echo "Next step: Update nginx configuration and reload nginx"
-echo "  sudo nano /etc/nginx/sites-available/homelab-landing"
-echo "  sudo nginx -t"
-echo "  sudo systemctl reload nginx"
+# Main
+case "${1:-full}" in
+    full)
+        deploy_full
+        ;;
+    env)
+        deploy_env
+        ;;
+    nginx)
+        deploy_nginx
+        ;;
+    db)
+        deploy_db
+        ;;
+    logs)
+        show_logs
+        ;;
+    status)
+        show_status
+        ;;
+    *)
+        echo "Usage: $0 {full|env|nginx|db|logs|status}"
+        echo ""
+        echo "Options:"
+        echo "  full   - Full rebuild and restart (default)"
+        echo "  env    - Just restart with new env vars"
+        echo "  nginx  - Just reload nginx config"
+        echo "  db     - Run database migrations"
+        echo "  logs   - Show recent logs"
+        echo "  status - Show app status"
+        exit 1
+        ;;
+esac

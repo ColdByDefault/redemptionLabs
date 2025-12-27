@@ -7,7 +7,7 @@ const publicRoutes = ["/login", "/register"];
 // Routes that should redirect to home if already authenticated
 const authRoutes = ["/login", "/register"];
 
-export function middleware(request: NextRequest): NextResponse {
+export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
   // Check for session token (NextAuth v5 uses authjs.session-token)

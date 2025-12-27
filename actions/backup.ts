@@ -795,9 +795,7 @@ export async function restoreBackup(
 // VALIDATION
 // ============================================================
 
-export async function validateBackupFile(
-  backupJson: string
-): Promise<{
+export async function validateBackupFile(backupJson: string): Promise<{
   valid: boolean;
   message: string;
   stats?: BackupStats;
@@ -842,12 +840,22 @@ export async function validateBackupFile(
       stats.banks +
       stats.wishlistItems;
 
-    return {
+    const result: {
+      valid: boolean;
+      message: string;
+      stats?: BackupStats;
+      userId?: string;
+    } = {
       valid: true,
       message: `Valid backup from ${backup.metadata.createdAt}`,
       stats,
-      userId: backup.metadata.userId,
     };
+
+    if (backup.metadata.userId) {
+      result.userId = backup.metadata.userId;
+    }
+
+    return result;
   } catch {
     return { valid: false, message: "Invalid JSON format" };
   }
