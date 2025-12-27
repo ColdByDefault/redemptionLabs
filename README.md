@@ -226,3 +226,4 @@ sudo tail -f /var/log/nginx/homelab-landing-error.log
 ## License
 
 Private - All rights reserved
+.
